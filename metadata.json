@@ -1,0 +1,6 @@
+{
+  "name": "Free Lancing Calendar",
+  "description": "Color-coded booking and availability calendar for freelance photographers, cinematographers, and drone operators with WhatsApp broadcast and multi-date selection.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
