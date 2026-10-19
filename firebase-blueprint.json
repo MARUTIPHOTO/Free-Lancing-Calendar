@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "StudioProfile": {
+      "title": "StudioProfile",
+      "description": "Public and private studio profile details for freelance operators",
+      "type": "object",
+      "properties": {
+        "studioId": { "type": "string" },
+        "studioName": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "roleSpecialization": { "type": "string" },
+        "cameraGear": { "type": "string" },
+        "defaultDayRate": { "type": "number" },
+        "defaultAdvance": { "type": "number" },
+        "selectedLanguage": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studioId", "studioName", "phone"]
+    },
+    "StudioDate": {
+      "title": "StudioDate",
+      "description": "Availability status and event booking details for a specific calendar date",
+      "type": "object",
+      "properties": {
+        "dateKey": { "type": "string" },
+        "status": { "type": "string", "enum": ["FREE", "INQUIRY", "BOOKED"] },
+        "clientName": { "type": "string" },
+        "clientPhone": { "type": "string" },
+        "eventType": { "type": "string" },
+        "shiftType": { "type": "string" },
+        "customNote": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "advanceAmount": { "type": "number" },
+        "pendingAmount": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["dateKey", "status"]
+    },
+    "StudioInquiry": {
+      "title": "StudioInquiry",
+      "description": "Client booking request submitted via the web client booking portal",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientName": { "type": "string" },
+        "clientPhone": { "type": "string" },
+        "dateKeys": {
+          "type": "array"
+        },
+        "eventType": { "type": "string" },
+        "shiftType": { "type": "string" },
+        "notes": { "type": "string" },
+        "budget": { "type": "number" },
+        "status": { "type": "string", "enum": ["PENDING", "CONFIRMED", "DECLINED"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clientName", "clientPhone", "status"]
+    }
+  },
+  "firestore": {
+    "/studios/{studioId}": {
+      "schema": { "$ref": "#/entities/StudioProfile" },
+      "description": "Studio settings and public profile details"
+    },
+    "/studios/{studioId}/dates/{dateKey}": {
+      "schema": { "$ref": "#/entities/StudioDate" },
+      "description": "Calendar dates and status (Free / Inquiry / Booked)"
+    },
+    "/studios/{studioId}/inquiries/{inquiryId}": {
+      "schema": { "$ref": "#/entities/StudioInquiry" },
+      "description": "Client inquiries submitted from web portal"
+    }
+  }
+}

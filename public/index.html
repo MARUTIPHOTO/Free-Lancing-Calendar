@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free Lancing Calendar - Client Booking Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #F59E0B;
+      --primary-dark: #D97706;
+      --bg-dark: #0B0F17;
+      --card-bg: #151D2A;
+      --card-border: #1E293B;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --free-color: #22C55E;
+      --free-bg: rgba(34, 197, 94, 0.12);
+      --booked-color: #EF4444;
+      --booked-bg: rgba(239, 68, 68, 0.12);
+      --inquiry-color: #EAB308;
+      --inquiry-bg: rgba(234, 179, 8, 0.12);
+      --accent: #38BDF8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px;
+    }
+    .container {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    header {
+      background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    .studio-badge {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .studio-meta { font-size: 13px; color: var(--text-muted); display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    }
+    
+    .legend {
+      display: flex;
+      justify-content: space-around;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 10px 14px;
+      border-radius: 14px;
+      margin-bottom: 16px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-free { background: var(--free-color); box-shadow: 0 0 8px var(--free-color); }
+    .dot-booked { background: var(--booked-color); }
+    .dot-inquiry { background: var(--inquiry-color); }
+
+    .calendar-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .nav-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--card-border);
+      color: white;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.12); }
+    .month-title { font-size: 17px; font-weight: 700; color: #FFF; }
+
+    .weekday-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .day-cell {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      position: relative;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .day-cell.empty { background: transparent; cursor: default; border: none; }
+    .day-cell.free {
+      background: var(--free-bg);
+      color: #4ADE80;
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+    .day-cell.booked {
+      background: var(--booked-bg);
+      color: #F87171;
+      border-color: rgba(239, 68, 68, 0.3);
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+    .day-cell.inquiry {
+      background: var(--inquiry-bg);
+      color: #FACC15;
+      border-color: rgba(234, 179, 8, 0.3);
+    }
+    .day-cell.selected {
+      border: 2px solid #FFF !important;
+      box-shadow: 0 0 12px rgba(255,255,255,0.4);
+      transform: scale(1.05);
+      z-index: 2;
+    }
+    .status-badge {
+      font-size: 8px;
+      font-weight: 800;
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .form-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+    }
+    .selected-dates-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px dashed var(--card-border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .selected-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .chip {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 8px;
+    }
+
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
+    input, select, textarea {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      color: #FFF;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      color: #0F172A;
+      font-size: 15px;
+      font-weight: 800;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      margin-top: 10px;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
+      transition: all 0.2s;
+    }
+    .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Success Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 24px;
+      padding: 28px 24px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .success-icon { font-size: 48px; margin-bottom: 12px; }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc",
+      authDomain: "gen-lang-client-0524337453.firebaseapp.com",
+      projectId: "gen-lang-client-0524337453",
+      storageBucket: "gen-lang-client-0524337453.firebasestorage.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app, "ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c");
+
+    // URL Parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const studioId = urlParams.get("studio") || "default_studio";
+    const initialDatesParam = urlParams.get("dates") || "";
+
+    let currentYear = new Date().getFullYear();
+    let currentMonth = new Date().getMonth(); // 0-indexed
+    let datesMap = {}; // "YYYY-MM-DD" -> { status: "FREE"|"BOOKED"|"INQUIRY" }
+    let selectedDates = new Set();
+
+    if (initialDatesParam) {
+      initialDatesParam.split(",").forEach(d => {
+        if (d.trim()) selectedDates.add(d.trim());
+      });
+    }
+
+    const monthNames = [
+      "January (જાન્યુઆરી)", "February (ફેબ્રુઆરી)", "March (માર્ચ)",
+      "April (એપ્રિલ)", "May (મે)", "June (જૂન)",
+      "July (જુલાઈ)", "August (ઓગસ્ટ)", "September (સપ્ટેમ્બર)",
+      "October (ઓક્ટોબર)", "November (નવેમ્બર)", "December (ડિસેમ્બર)"
+    ];
+
+    async function loadStudioData() {
+      try {
+        const studioDoc = await getDoc(doc(db, "studios", studioId));
+        if (studioDoc.exists()) {
+          const data = studioDoc.data();
+          if (data.studioName) document.getElementById("studio-name").innerText = data.studioName;
+          if (data.phone) document.getElementById("studio-phone").innerText = "📞 " + data.phone;
+          if (data.roleSpecialization) document.getElementById("studio-role").innerText = "🎯 " + data.roleSpecialization;
+        }
+
+        const datesSnapshot = await getDocs(collection(db, "studios", studioId, "dates"));
+        datesSnapshot.forEach(d => {
+          datesMap[d.id] = d.data();
+        });
+      } catch (e) {
+        console.warn("Using offline preview dates or error fetching:", e);
+      }
+      renderCalendar();
+      updateSelectedBox();
+    }
+
+    function renderCalendar() {
+      document.getElementById("month-title").innerText = monthNames[currentMonth] + " " + currentYear;
+      const grid = document.getElementById("calendar-grid");
+      grid.innerHTML = "";
+
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      // Empty lead days
+      for (let i = 0; i < firstDay; i++) {
+        const emptyCell = document.createElement("div");
+        emptyCell.className = "day-cell empty";
+        grid.appendChild(emptyCell);
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const mStr = String(currentMonth + 1).padStart(2, "0");
+        const dStr = String(day).padStart(2, "0");
+        const dateKey = `${currentYear}-${mStr}-${dStr}`;
+
+        const cell = document.createElement("div");
+        cell.className = "day-cell";
+        
+        const dateRecord = datesMap[dateKey];
+        const status = dateRecord ? dateRecord.status : "FREE"; // Default free if not booked
+
+        if (status === "BOOKED") {
+          cell.classList.add("booked");
+          cell.innerHTML = `<span>${day}</span><span class="status-badge">Booked 🔴</span>`;
+        } else if (status === "INQUIRY") {
+          cell.classList.add("inquiry");
+          cell.innerHTML = `<span>${day}</span><span class="status-badge">Inquiry 🟡</span>`;
+        } else {
+          cell.classList.add("free");
+          cell.innerHTML = `<span>${day}</span><span class="status-badge">Free 🟢</span>`;
+        }
+
+        if (selectedDates.has(dateKey)) {
+          cell.classList.add("selected");
+        }
+
+        cell.onclick = () => {
+          if (status === "BOOKED") {
+            alert("આ તારીખ પહેલેથી બુક થયેલી છે! (This date is already booked)");
+            return;
+          }
+          if (selectedDates.has(dateKey)) {
+            selectedDates.delete(dateKey);
+            cell.classList.remove("selected");
+          } else {
+            selectedDates.add(dateKey);
+            cell.classList.add("selected");
+          }
+          updateSelectedBox();
+        };
+
+        grid.appendChild(cell);
+      }
+    }
+
+    function updateSelectedBox() {
+      const box = document.getElementById("selected-chips");
+      const submitBtn = document.getElementById("submit-btn");
+      box.innerHTML = "";
+
+      if (selectedDates.size === 0) {
+        box.innerHTML = "<em>તારીખ સિલેક્ટ કરવા ઉપર કેલેન્ડર પર ટેપ કરો (Tap date above)</em>";
+        submitBtn.disabled = true;
+      } else {
+        Array.from(selectedDates).sort().forEach(date => {
+          const chip = document.createElement("div");
+          chip.className = "chip";
+          chip.innerText = "📅 " + date;
+          box.appendChild(chip);
+        });
+        submitBtn.disabled = false;
+      }
+    }
+
+    window.changeMonth = function(delta) {
+      currentMonth += delta;
+      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+      renderCalendar();
+    };
+
+    window.submitInquiry = async function(e) {
+      e.preventDefault();
+      const clientName = document.getElementById("client-name").value.trim();
+      const clientPhone = document.getElementById("client-phone").value.trim();
+      const eventType = document.getElementById("event-type").value;
+      const shiftType = document.getElementById("shift-type").value;
+      const notes = document.getElementById("notes").value.trim();
+
+      if (!clientName || !clientPhone) {
+        alert("કૃપા કરીને તમારું નામ અને મોબાઈલ નંબર દાખલ કરો!");
+        return;
+      }
+      if (selectedDates.size === 0) {
+        alert("કૃપા કરીને ઓછામાં ઓછી ૧ તારીખ સિલેક્ટ કરો!");
+        return;
+      }
+
+      const submitBtn = document.getElementById("submit-btn");
+      submitBtn.disabled = true;
+      submitBtn.innerText = "સબમિટ થઈ રહ્યું છે... (Submitting...)";
+
+      try {
+        const payload = {
+          clientName: clientName,
+          clientPhone: clientPhone,
+          dateKeys: Array.from(selectedDates).sort(),
+          eventType: eventType,
+          shiftType: shiftType,
+          notes: notes,
+          status: "PENDING",
+          createdAt: serverTimestamp()
+        };
+
+        await addDoc(collection(db, "studios", studioId, "inquiries"), payload);
+
+        // Show success modal
+        document.getElementById("modal-overlay").classList.add("active");
+      } catch (err) {
+        console.error("Submission error:", err);
+        alert("બુકિંગ રિક્વેસ્ટ મોકલવામાં ભૂલ થઈ. કૃપા કરીને સીધો ફોન કરો. Error: " + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "બુકિંગ રિક્વેસ્ટ મોકલો (Submit Booking Request 🔴)";
+      }
+    };
+
+    window.closeModal = function() {
+      document.getElementById("modal-overlay").classList.remove("active");
+      selectedDates.clear();
+      document.getElementById("booking-form").reset();
+      updateSelectedBox();
+      renderCalendar();
+    };
+
+    loadStudioData();
+  </script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="studio-badge">⭐ Studio Availability Calendar</div>
+      <h1 id="studio-name">Free Lancing Studio</h1>
+      <div class="studio-meta">
+        <span id="studio-role">🎯 Cinematic Video & Candid Photography</span>
+        <span id="studio-phone">📞 9876543210</span>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="legend">
+        <div class="legend-item"><div class="dot dot-free"></div><span>ખાલી (Free 🟢)</span></div>
+        <div class="legend-item"><div class="dot dot-booked"></div><span>બુક થયેલ (Booked 🔴)</span></div>
+        <div class="legend-item"><div class="dot dot-inquiry"></div><span>પૂછપરછ (Inquiry 🟡)</span></div>
+      </div>
+
+      <div class="calendar-nav">
+        <button class="nav-btn" onclick="changeMonth(-1)">❮</button>
+        <span class="month-title" id="month-title">Calendar</span>
+        <button class="nav-btn" onclick="changeMonth(1)">❯</button>
+      </div>
+
+      <div class="weekday-grid">
+        <div>રવિ</div><div>સોમ</div><div>મંગળ</div><div>બુધ</div><div>ગુરુ</div><div>શુક્ર</div><div>શનિ</div>
+      </div>
+
+      <div class="calendar-grid" id="calendar-grid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="form-title">
+        <span>📝</span>
+        <span>તારીખ બુકિંગ ફોર્મ (Book Selected Date)</span>
+      </div>
+
+      <div class="selected-dates-box">
+        <strong>પસંદ કરેલ તારીખો (Selected Dates):</strong>
+        <div class="selected-chips" id="selected-chips"></div>
+      </div>
+
+      <form id="booking-form" onsubmit="submitInquiry(event)">
+        <div class="form-group">
+          <label>તમારું પૂરું નામ (Your Full Name) *</label>
+          <input type="text" id="client-name" placeholder="દા.ત. રાહુલ પટેલ" required>
+        </div>
+
+        <div class="form-group">
+          <label>મોબાઈલ નંબર / WhatsApp Number *</label>
+          <input type="tel" id="client-phone" placeholder="દા.ત. 98250 XXXXX" required>
+        </div>
+
+        <div class="form-group">
+          <label>ઇવેન્ટનો પ્રકાર (Event Type)</label>
+          <select id="event-type">
+            <option value="Wedding / લગ્ન">Wedding / લગ્ન</option>
+            <option value="Pre-Wedding Shoot / પ્રી-વેડિંગ">Pre-Wedding Shoot / પ્રી-વેડિંગ</option>
+            <option value="Ring Ceremony / સગાઈ">Ring Ceremony / સગાઈ</option>
+            <option value="Reception / રિસેપ્શન">Reception / રિસેપ્શન</option>
+            <option value="Mamera / માંડવો">Mamera / માંડવો</option>
+            <option value="Baby Shower / સીમંત">Baby Shower / સીમંત</option>
+            <option value="Birthday / પાર્ટી">Birthday / પાર્ટી</option>
+            <option value="Corporate / કોમર્શિયલ">Corporate / કોમર્શિયલ</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>શિફ્ટ ટાઈપ (Shift Type)</label>
+          <select id="shift-type">
+            <option value="Full Day (આખો દિવસ)">Full Day (આખો દિવસ)</option>
+            <option value="Half Day (અડધો દિવસ)">Half Day (અડધો દિવસ)</option>
+            <option value="Evening (સાંજનો સમય)">Evening (સાંજનો સમય)</option>
+            <option value="Night (રાતનો સમય)">Night (રાતનો સમય)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>વધારાની વિગત / સ્થળ (Location & Details)</label>
+          <textarea id="notes" rows="2" placeholder="સ્થળ, શહેર અથવા કોઈ ખાસ જરૂરિયાત..."></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn" id="submit-btn" disabled>
+          બુકિંગ રિક્વેસ્ટ મોકલો (Submit Booking Request 🔴)
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-content">
+      <div class="success-icon">🎉</div>
+      <h2 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">વિનંતી મોકલાઈ ગઈ!</h2>
+      <p style="font-size: 14px; color: #94A3B8; margin-bottom: 20px; line-height: 1.5;">
+        તમારી પસંદ કરેલ તારીખોની વિનંતી સ્ટુડિયોને મોકલી દેવામાં આવી છે. સ્ટુડિયો કન્ફર્મ કરશે એટલે કેલેન્ડરમાં બુક થઈ જશે.
+      </p>
+      <button onclick="closeModal()" class="submit-btn" style="margin-top:0;">
+        બરાબર છે (Done)
+      </button>
+    </div>
+  </div>
+</body>
+</html>

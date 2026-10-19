@@ -130,7 +130,7 @@ class SelectionModeTest {
 
     // Verify studio's booking link is generated and included in the message
     val bookingLink = viewModel.getBookingLinkForSelectedDates()
-    assertTrue(bookingLink.contains("https://marutiphoto.app/book?dates="))
+    assertTrue(bookingLink.contains("web.app/?dates=") || bookingLink.contains("marutiphoto.app"))
     assertTrue(bookingLink.contains("2026-11-20,2026-11-21,2026-11-22"))
     assertTrue(message.contains(bookingLink))
   }

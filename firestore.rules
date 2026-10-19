@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(studioId) {
+      return request.auth != null && request.auth.uid == studioId;
+    }
+
+    function isValidStudioProfile(data) {
+      return data.studioId is string &&
+             data.studioName is string && data.studioName.size() > 0 && data.studioName.size() <= 100 &&
+             data.phone is string && data.phone.size() > 0 && data.phone.size() <= 30;
+    }
+
+    function isValidStudioDate(data) {
+      return data.dateKey is string && data.dateKey.size() == 10 &&
+             data.status in ['FREE', 'INQUIRY', 'BOOKED'];
+    }
+
+    function isValidStudioInquiry(data) {
+      return data.clientName is string && data.clientName.size() > 0 && data.clientName.size() <= 100 &&
+             data.clientPhone is string && data.clientPhone.size() > 0 && data.clientPhone.size() <= 30 &&
+             data.status in ['PENDING', 'CONFIRMED', 'DECLINED'];
+    }
+
+    match /studios/{studioId} {
+      allow read: if true;
+      allow create, update: if isOwner(studioId) && isValidStudioProfile(request.resource.data);
+      allow delete: if isOwner(studioId);
+
+      match /dates/{dateKey} {
+        allow read: if true;
+        allow create, update: if isOwner(studioId) && isValidStudioDate(request.resource.data);
+        allow delete: if isOwner(studioId);
+      }
+
+      match /inquiries/{inquiryId} {
+        allow read: if isOwner(studioId);
+        allow create: if (isOwner(studioId) || request.resource.data.status == 'PENDING') && isValidStudioInquiry(request.resource.data);
+        allow update: if isOwner(studioId) && isValidStudioInquiry(request.resource.data);
+        allow delete: if isOwner(studioId);
+      }
+    }
+  }
+}

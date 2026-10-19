@@ -140,26 +140,37 @@ class StudioRepository(private val dao: StudioDao) {
     totalAmount: Double = 0.0
   ) {
     dao.markInquiryConfirmed(inquiryId)
-    val existing = dao.getDate(dateKey)
-    if (existing != null) {
-      dao.upsertDate(
-        existing.copy(
-          status = DateStatus.BOOKED.name,
-          advanceAmount = if (advanceAmount > 0) advanceAmount else existing.advanceAmount,
-          totalPackageAmount = if (totalAmount > 0) totalAmount else existing.totalPackageAmount,
-          updatedAt = System.currentTimeMillis()
-        )
-      )
+    val keys = if (dateKey.contains(",")) {
+      dateKey.split(",").map { it.trim() }.filter { it.isNotEmpty() }
     } else {
-      dao.upsertDate(
-        StudioDateEntity(
-          dateKey = dateKey,
-          status = DateStatus.BOOKED.name,
-          advanceAmount = advanceAmount,
-          totalPackageAmount = totalAmount,
-          updatedAt = System.currentTimeMillis()
+      listOf(dateKey)
+    }
+    val count = keys.size.coerceAtLeast(1)
+    val advPerDate = advanceAmount / count
+    val totPerDate = totalAmount / count
+
+    keys.forEach { key ->
+      val existing = dao.getDate(key)
+      if (existing != null) {
+        dao.upsertDate(
+          existing.copy(
+            status = DateStatus.BOOKED.name,
+            advanceAmount = if (advPerDate > 0) advPerDate else existing.advanceAmount,
+            totalPackageAmount = if (totPerDate > 0) totPerDate else existing.totalPackageAmount,
+            updatedAt = System.currentTimeMillis()
+          )
         )
-      )
+      } else {
+        dao.upsertDate(
+          StudioDateEntity(
+            dateKey = key,
+            status = DateStatus.BOOKED.name,
+            advanceAmount = advPerDate,
+            totalPackageAmount = totPerDate,
+            updatedAt = System.currentTimeMillis()
+          )
+        )
+      }
     }
   }
 
@@ -204,7 +215,7 @@ class StudioRepository(private val dao: StudioDao) {
       "MarutiStudio"
     }
     val datesParam = if (dateKeys.isEmpty()) "" else dateKeys.sorted().joinToString(",")
-    return "https://marutiphoto.app/book?dates=$datesParam&studio=$encodedStudio"
+    return "https://gen-lang-client-0524337453.web.app/?dates=$datesParam&studio=$encodedStudio"
   }
 
   fun generateBookingLink(dateKey: String, studioName: String): String {
