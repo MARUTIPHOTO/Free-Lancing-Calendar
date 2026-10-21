@@ -3,16 +3,21 @@ package com.example.ui.components
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,6 +38,19 @@ import com.google.android.gms.ads.LoadAdError
 
 // Official Google AdMob Test Banner Unit ID
 const val ADMOB_TEST_BANNER_ID = "ca-app-pub-3940256099942544/6300978111"
+
+fun isRunningOnEmulator(): Boolean {
+  return (Build.FINGERPRINT.startsWith("generic")
+      || Build.FINGERPRINT.startsWith("unknown")
+      || Build.MODEL.contains("google_sdk")
+      || Build.MODEL.contains("Emulator")
+      || Build.MODEL.contains("Android SDK built for x86")
+      || Build.MANUFACTURER.contains("Genymotion")
+      || Build.HARDWARE.contains("goldfish")
+      || Build.HARDWARE.contains("ranchu")
+      || Build.PRODUCT.contains("sdk")
+      || Build.PRODUCT.contains("google_sdk"))
+}
 
 fun Context.findActivity(): Activity? {
   var currentContext = this
@@ -66,7 +84,39 @@ fun AdMobBanner(
         .height(50.dp),
       contentAlignment = Alignment.Center
     ) {
-      if (activity != null) {
+      if (isRunningOnEmulator() || activity == null) {
+        // High-Fidelity Test Ad Banner in preview/emulator (avoids headless Chromium variation seed loader warning)
+        Row(
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+            .background(Color(0xFF0F172A))
+            .padding(horizontal = 14.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.Center
+        ) {
+          Surface(
+            shape = RoundedCornerShape(4.dp),
+            color = Color(0xFFF59E0B)
+          ) {
+            Text(
+              text = "Ad",
+              fontSize = 10.sp,
+              fontWeight = FontWeight.Bold,
+              color = Color(0xFF0F172A),
+              modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+            )
+          }
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(
+            text = "Google AdMob Test Banner • 320x50",
+            fontSize = 11.sp,
+            color = Color(0xFFFDE68A),
+            fontWeight = FontWeight.SemiBold
+          )
+        }
+      } else {
+        // Real Native AdMob View on physical Android device
         AndroidView(
           modifier = Modifier.fillMaxWidth(),
           factory = { _ ->
@@ -93,21 +143,6 @@ fun AdMobBanner(
             }
           }
         )
-      } else {
-        Row(
-          modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.Center
-        ) {
-          Text(
-            text = "Ad • Google AdMob Test Active",
-            fontSize = 11.sp,
-            color = Color(0xFF94A3B8),
-            fontWeight = FontWeight.Medium
-          )
-        }
       }
     }
     HorizontalDivider(thickness = 0.5.dp, color = Color(0xFFE2E8F0))

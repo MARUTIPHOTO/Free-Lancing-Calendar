@@ -3,19 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Freelancer Calendar - Maruti Photo & Films</title>
+    <title>Maruti Photo & Films • Client Booking Portal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK (Compat for reliable static script execution) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Gujarati:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Plus Jakarta Sans', 'Noto Sans Gujarati', sans-serif;
-            background-color: #0f172a;
+            background-color: #f8fafc;
         }
         .calendar-grid {
             display: grid;
@@ -31,588 +28,445 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="bg-slate-50 text-slate-900 min-h-screen pb-12">
 
-    <!-- Direct Download Alert Banner for Real Android APK & PlayStore AAB -->
-    <div class="bg-amber-400 text-slate-900 px-4 py-2.5 font-bold text-sm shadow-md flex flex-wrap items-center justify-between gap-3 sticky top-0 z-50 border-b border-amber-500">
-        <div class="flex items-center gap-2">
-            <span class="text-lg">📲</span>
-            <span>અસલી Android APK ડાઉનલોડ કરો (પ્રિવ્યુ જેવો 5 ટેબ વાળો નવો વ્યુ):</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="/FreeLancingCalendar_Release.apk" download="FreeLancingCalendar_Release.apk" class="bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow flex items-center gap-1.5">
-                ⬇️ Download Release APK (17 MB)
-            </a>
-            <a href="/FreeLancingCalendar_PlayStore.aab" download="FreeLancingCalendar_PlayStore.aab" class="bg-blue-700 hover:bg-blue-800 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow flex items-center gap-1.5">
-                🚀 Play Store AAB
-            </a>
-        </div>
-    </div>
+    <!-- 1. Studio Branding Header Card (Matching Android ClientPortalScreen) -->
+    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800">
+        <div class="max-w-3xl mx-auto px-4 py-4 sm:px-6">
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-slate-950 shadow">
+                        <i data-lucide="camera" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h1 id="headerStudioName" class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-1.5">
+                            Maruti Photo & Films
+                            <span class="text-[10px] bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-semibold">Verified Studio</span>
+                        </h1>
+                        <p id="headerStudioDetails" class="text-xs text-slate-300">
+                            📞 +91 9876543210 • Ahmedabad, Gujarat
+                        </p>
+                    </div>
+                </div>
 
-    <!-- Top Header -->
-    <header class="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white shadow-lg relative z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-sm border border-white/20">
-                    <i data-lucide="calendar" class="w-6 h-6 text-white"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight flex items-center gap-2">
-                        Freelancer Event Calendar
-                        <span class="text-xs bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-medium">Live</span>
-                    </h1>
-                    <p class="text-xs text-blue-100 font-medium">Maruti Photo & Films | બુકિંગ અને ઇવેન્ટ કેલેન્ડર</p>
-                </div>
+                <!-- Language Toggle Button -->
+                <button onclick="toggleLanguage()" class="px-3 py-1 rounded-lg border border-amber-400 text-amber-300 hover:bg-slate-800 text-xs font-bold transition-all flex items-center gap-1">
+                    <i data-lucide="languages" class="w-3.5 h-3.5"></i>
+                    <span id="langButtonText">English</span>
+                </button>
             </div>
 
-            <!-- Header Action Controls -->
-            <div class="flex items-center gap-3">
-                <button onclick="openBookingModal()" class="bg-white text-blue-700 hover:bg-blue-50 px-4 py-2 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2">
-                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
-                    <span>નવું બુકિંગ ઉમેરો (+ New Booking)</span>
-                </button>
+            <!-- Sub-Banner -->
+            <div class="mt-3 bg-slate-800/90 border border-slate-700 rounded-xl px-3 py-2 text-center">
+                <p id="portalSubBannerText" class="text-xs font-semibold text-amber-200">
+                    🌟 ક્લાયન્ટ બુકિંગ પોર્ટલ • તારીખ અને શૂટિંગ સર્વિસ પસંદ કરો (Candid, Traditional, Video)
+                </p>
             </div>
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <!-- Main Content Container -->
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 pt-5 space-y-5">
 
-        <!-- Top Stats Row -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">કુલ ક્લાયન્ટ્સ (Total)</p>
-                    <h3 id="statTotalClients" class="text-2xl font-bold text-slate-900 mt-1">0</h3>
-                </div>
-                <div class="p-3 bg-blue-50 rounded-xl text-blue-600">
-                    <i data-lucide="users" class="w-5 h-5"></i>
-                </div>
+        <!-- 2. Interactive Monthly Calendar Card (Exact 1:1 match to Android App) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5">
+            <!-- Section Header -->
+            <div class="flex items-center gap-2 mb-3">
+                <i data-lucide="calendar" class="w-4 h-4 text-amber-600"></i>
+                <h2 id="section1Title" class="text-sm font-bold text-slate-900">
+                    ૧. કેલેન્ડરમાંથી તારીખો પસંદ કરો (ખાલી 🟢 તારીખ પર ટેપ કરો):
+                </h2>
             </div>
 
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">કન્ફર્મ ઇવેન્ટ્સ (Confirmed)</p>
-                    <h3 id="statConfirmedEvents" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
-                </div>
-                <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600">
-                    <i data-lucide="calendar-check" class="w-5 h-5"></i>
-                </div>
-            </div>
+            <!-- Month Navigation Bar -->
+            <div class="bg-slate-100 rounded-xl p-1.5 flex items-center justify-between mb-3">
+                <button onclick="changeMonth(-1)" class="p-1.5 hover:bg-white text-slate-700 rounded-lg transition-all" title="Previous Month">
+                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                </button>
 
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">એડવાન્સ જમા (Advance)</p>
-                    <h3 id="statAdvancePaid" class="text-2xl font-bold text-indigo-600 mt-1">₹0</h3>
-                </div>
-                <div class="p-3 bg-indigo-50 rounded-xl text-indigo-600">
-                    <i data-lucide="wallet" class="w-5 h-5"></i>
-                </div>
-            </div>
+                <h3 id="currentMonthYearText" class="text-sm font-bold text-slate-900">
+                    October 2026
+                </h3>
 
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                <div>
-                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">બાકી રકમ (Pending)</p>
-                    <h3 id="statPendingAmount" class="text-2xl font-bold text-amber-600 mt-1">₹0</h3>
-                </div>
-                <div class="p-3 bg-amber-50 rounded-xl text-amber-600">
-                    <i data-lucide="receipt" class="w-5 h-5"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Layout: Calendar (Left/Top) & Client Events List (Right/Bottom) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-            <!-- Calendar Section (7 cols) -->
-            <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
-                <!-- Month Header -->
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <h2 id="calendarMonthYear" class="text-lg font-bold text-slate-900">November 2026</h2>
-                        <button onclick="goToToday()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg font-medium">
-                            Today
-                        </button>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-100 text-slate-600 rounded-lg transition-colors">
-                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                        </button>
-                        <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-100 text-slate-600 rounded-lg transition-colors">
-                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Calendar Legend -->
-                <div class="flex items-center gap-4 text-xs font-medium text-slate-600 mb-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                    <span class="flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Confirmed (કન્ફર્મ બુકિંગ)
-                    </span>
-                    <span class="flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Inquiry (પૂછપરછ)
-                    </span>
-                    <span class="flex items-center gap-1.5">
-                        <span class="w-2.5 h-2.5 rounded-full ring-2 ring-blue-500 bg-white"></span> Selected Date
-                    </span>
-                </div>
-
-                <!-- Weekdays Header -->
-                <div class="calendar-grid text-center font-semibold text-xs text-slate-400 py-2 border-b border-slate-100">
-                    <div>સોમ (Mon)</div>
-                    <div>મંગળ (Tue)</div>
-                    <div>બુધ (Wed)</div>
-                    <div>ગુરુ (Thu)</div>
-                    <div>શુક્ર (Fri)</div>
-                    <div>શનિ (Sat)</div>
-                    <div class="text-rose-500">રવિ (Sun)</div>
-                </div>
-
-                <!-- Calendar Days Grid -->
-                <div id="calendarDaysGrid" class="calendar-grid gap-1 mt-2">
-                    <!-- Injected dynamically by JS -->
-                </div>
-
-                <!-- Selected Date Quick Action Bar -->
-                <div id="selectedDateBanner" class="mt-4 p-3 bg-blue-50/70 border border-blue-100 rounded-xl flex items-center justify-between text-xs text-blue-900">
-                    <div class="flex items-center gap-2">
-                        <i data-lucide="calendar-days" class="w-4 h-4 text-blue-600"></i>
-                        <span id="selectedDateBannerText">પસંદ કરેલ તારીખ: આજ (Today)</span>
-                    </div>
-                    <button onclick="openBookingModalForSelectedDate()" class="text-blue-700 hover:text-blue-900 font-bold bg-white px-3 py-1 rounded-lg border border-blue-200 shadow-sm flex items-center gap-1">
-                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                        આ તારીખે બુકિંગ ઉમેરો
+                <div class="flex items-center gap-1">
+                    <button onclick="goToToday()" class="p-1.5 hover:bg-white text-amber-600 rounded-lg transition-all text-xs font-bold flex items-center gap-1" title="Go to Today">
+                        <i data-lucide="calendar-days" class="w-4 h-4"></i>
+                        <span id="todayButtonText" class="hidden sm:inline">આજ (Today)</span>
+                    </button>
+                    <button onclick="changeMonth(1)" class="p-1.5 hover:bg-white text-slate-700 rounded-lg transition-all" title="Next Month">
+                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Client Event List Section (5 cols) -->
-            <div class="lg:col-span-5 space-y-4">
-                <!-- Search & Filter Controls -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-3">
-                    <div class="relative">
-                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
-                        <input id="searchInput" type="text" oninput="handleSearch()" placeholder="Search client name, phone, city..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
-                    </div>
-
-                    <!-- Filter Tabs -->
-                    <div class="flex gap-2">
-                        <button onclick="setFilter('ALL')" id="filterAll" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition-all">
-                            બધા (All)
-                        </button>
-                        <button onclick="setFilter('CONFIRMED')" id="filterConfirmed" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
-                            કન્ફર્મ (Confirmed)
-                        </button>
-                        <button onclick="setFilter('INQUIRY')" id="filterInquiry" class="flex-1 py-1.5 px-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">
-                            ઇન્ક્વાયરી (Inquiry)
-                        </button>
-                    </div>
+            <!-- Status Legend Bar -->
+            <div class="flex items-center justify-around text-xs font-semibold bg-slate-50 border border-slate-100 rounded-xl py-2 px-1 mb-3">
+                <div class="flex items-center gap-1.5 text-emerald-700">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <span id="legendFree">ઉપલબ્ધ (Open)</span>
                 </div>
-
-                <!-- Event Cards List -->
-                <div id="eventsListContainer" class="space-y-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar">
-                    <!-- Injected dynamically by JS -->
+                <div class="flex items-center gap-1.5 text-rose-600">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                    <span id="legendBooked">બુક થયેલ 🔒</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-amber-700">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                    <span id="legendSelected">પસંદ કરેલ (Selected)</span>
                 </div>
             </div>
-        </div>
+
+            <!-- Weekday Headers (7 Columns) -->
+            <div class="calendar-grid text-center font-bold text-xs text-slate-500 py-1 border-b border-slate-100 mb-1">
+                <div class="text-rose-600" id="wdSun">રવિ</div>
+                <div id="wdMon">સોમ</div>
+                <div id="wdTue">મંગળ</div>
+                <div id="wdWed">બુધ</div>
+                <div id="wdThu">ગુરુ</div>
+                <div id="wdFri">શુક્ર</div>
+                <div id="wdSat">શનિ</div>
+            </div>
+
+            <!-- Calendar Days Grid -->
+            <div id="calendarDaysGrid" class="calendar-grid gap-1 mt-1">
+                <!-- Dynamically populated via JS -->
+            </div>
+
+            <!-- Selected Dates and Per-Date Service Chooser Container -->
+            <div id="selectedServicesContainer" class="mt-4 hidden">
+                <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-3 sm:p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span id="selectedServicesHeading" class="text-xs font-bold text-amber-950 uppercase flex items-center gap-1">
+                            <i data-lucide="check-circle" class="w-3.5 h-3.5 text-amber-600"></i>
+                            પસંદ કરેલી તારીખો અને સર્વિસ (0 દિવસ):
+                        </span>
+                        <button onclick="clearAllSelections()" class="text-xs font-bold text-rose-600 hover:text-rose-800">
+                            બધા સાફ કરો (Clear)
+                        </button>
+                    </div>
+
+                    <!-- List of Selected Date Cards with Service Choosers -->
+                    <div id="selectedDateCardsList" class="space-y-2">
+                        <!-- Injected by JS -->
+                    </div>
+
+                    <!-- Total Estimated Budget Banner -->
+                    <div class="bg-slate-900 text-white rounded-xl p-3 flex items-center justify-between shadow-sm">
+                        <div class="flex items-center gap-1.5 text-xs text-slate-300">
+                            <i data-lucide="receipt" class="w-4 h-4 text-amber-400"></i>
+                            <span id="totalEstimateLabel">કુલ અંદાજિત બજેટ (Total Estimate):</span>
+                        </div>
+                        <span id="totalEstimateAmount" class="text-base font-bold text-amber-300">₹0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty Selection Helper Note -->
+            <div id="emptySelectHelper" class="mt-3 bg-slate-50 rounded-xl p-2.5 text-center text-xs text-slate-500 border border-slate-100">
+                👆 કેલેન્ડરમાં ઉપલબ્ધ (🟢) તારીખ પર ક્લિક કરીને તારીખો અને શૂટિંગ સર્વિસ પસંદ કરો.
+            </div>
+        </section>
+
+        <!-- 3. Client Information Form (Exact match to Android App) -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <i data-lucide="user-check" class="w-4 h-4 text-amber-600"></i>
+                <h2 id="section2Title" class="text-sm font-bold text-slate-900">
+                    ૨. તમારી વિગતો ભરો:
+                </h2>
+            </div>
+
+            <form id="inquiryForm" onsubmit="handleInquirySubmit(event)" class="space-y-3">
+                <!-- Name -->
+                <div>
+                    <label id="labelName" class="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        તમારું નામ / ક્લાયન્ટનું નામ *
+                    </label>
+                    <div class="relative">
+                        <i data-lucide="user" class="w-4 h-4 text-amber-600 absolute left-3 top-3"></i>
+                        <input type="text" id="inputClientName" required placeholder="દા.ત. Rajesh Patel" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <!-- Phone -->
+                <div>
+                    <label id="labelPhone" class="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        મોબાઈલ નંબર (WhatsApp) *
+                    </label>
+                    <div class="relative">
+                        <i data-lucide="phone" class="w-4 h-4 text-emerald-600 absolute left-3 top-3"></i>
+                        <input type="tel" id="inputClientPhone" required placeholder="દા.ત. 9876543210" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <!-- Venue / Location -->
+                <div>
+                    <label id="labelLocation" class="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        સ્થળ / વેન્યુ / શહેર (Location / City) *
+                    </label>
+                    <div class="relative">
+                        <i data-lucide="map-pin" class="w-4 h-4 text-rose-500 absolute left-3 top-3"></i>
+                        <input type="text" id="inputClientLocation" required placeholder="દા.ત. Shreeji Party Plot, Ahmedabad" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
+                    </div>
+                </div>
+
+                <!-- Notes / Special Requirements -->
+                <div>
+                    <label id="labelNotes" class="block text-xs font-bold text-slate-700 uppercase mb-1">
+                        શૂટિંગ વિગત / વધારાની નોટ્સ (Optional)
+                    </label>
+                    <div class="relative">
+                        <i data-lucide="file-text" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                        <textarea id="inputClientNotes" rows="2" placeholder="દા.ત. 1 Album + 1 Pen Drive, Drone Shoot for Evening Sangeet..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"></textarea>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitButton" class="w-full mt-2 py-3 px-4 bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="send" class="w-4 h-4 text-amber-400"></i>
+                    <span id="submitButtonText">બુકિંગ ઇન્ક્વાયરી મોકલો 🚀</span>
+                </button>
+            </form>
+        </section>
     </main>
 
-    <!-- NEW / EDIT CLIENT EVENT MODAL (Multi-Date Selection for 1 Client) -->
-    <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
-            <!-- Modal Header -->
-            <div class="px-6 py-4 bg-gradient-to-r from-blue-700 to-indigo-700 text-white flex items-center justify-between">
-                <div>
-                    <h3 id="modalTitle" class="text-lg font-bold">નવું ક્લાયન્ટ બુકિંગ (New Client Booking)</h3>
-                    <p class="text-xs text-blue-100">એક જ ક્લાયન્ટ માટે મલ્ટીપલ તારીખો (Multi-Date Selection)</p>
-                </div>
-                <button onclick="closeBookingModal()" class="text-white/80 hover:text-white p-1 rounded-lg">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+    <!-- SUCCESS MODAL (Matches Android App Success Dialog) -->
+    <div id="successModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden text-center p-6 space-y-4">
+            <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+                <i data-lucide="check-circle" class="w-10 h-10"></i>
+            </div>
+            <div>
+                <h3 id="modalSuccessTitle" class="text-lg font-bold text-slate-900">
+                    ઇન્ક્વાયરી સફળતાપૂર્વક મોકલાઈ ગઈ! 🎉
+                </h3>
+                <p id="modalSuccessDesc" class="text-xs text-slate-600 mt-1">
+                    તમારી બુકિંગ ઇન્ક્વાયરી Maruti Photo & Films ને પહોંચી ગઈ છે. અમે ટૂંક સમયમાં તમારો સંપર્ક કરીશું.
+                </p>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-left text-xs space-y-1">
+                <p class="font-bold text-slate-800" id="modalSummaryClient">ક્લાયન્ટ: -</p>
+                <p class="text-slate-600" id="modalSummaryDates">તારીખો: -</p>
+                <p class="text-slate-600" id="modalSummaryTotal">અંદાજિત બજેટ: ₹0</p>
+            </div>
+
+            <div class="flex items-center gap-2 pt-2">
+                <button onclick="closeSuccessModal()" class="flex-1 py-2.5 px-3 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-bold">
+                    બંધ કરો (Close)
+                </button>
+                <button onclick="openDirectWhatsApp()" class="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                    <span>WhatsApp ખોલો</span>
                 </button>
             </div>
-
-            <!-- Modal Body Form -->
-            <form id="bookingForm" onsubmit="handleSaveEvent(event)" class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
-                <input type="hidden" id="eventId">
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Client Name -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">ક્લાયન્ટનું નામ (Client Name) *</label>
-                        <input type="text" id="clientName" required placeholder="દા.ત. Rajesh & Priya Patel Wedding" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-
-                    <!-- Phone Number -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">મોબાઈલ નંબર (Phone Number) *</label>
-                        <input type="tel" id="clientPhone" required placeholder="દા.ત. 9876543210" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Event Type -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">ઇવેન્ટ પ્રકાર (Event Type)</label>
-                        <select id="eventType" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
-                            <option value="Wedding">Wedding (લગ્ન પ્રસંગ)</option>
-                            <option value="Pre-Wedding">Pre-Wedding Shoot</option>
-                            <option value="Reception">Reception (રિસેપ્શન)</option>
-                            <option value="Ring Ceremony">Ring Ceremony (સગાઈ)</option>
-                            <option value="Haldi / Sangeet">Haldi / Sangeet</option>
-                            <option value="Maternity / Baby">Maternity / Baby Shower</option>
-                            <option value="Birthday / Party">Birthday Party</option>
-                            <option value="Corporate Event">Corporate Event</option>
-                        </select>
-                    </div>
-
-                    <!-- Booking Status -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">સ્ટેટસ (Status)</label>
-                        <div class="flex gap-2">
-                            <label class="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-xl border border-slate-200 text-xs font-bold cursor-pointer has-[:checked]:bg-emerald-500 has-[:checked]:text-white has-[:checked]:border-emerald-500 transition-all">
-                                <input type="radio" name="isConfirmed" value="true" checked class="hidden">
-                                <i data-lucide="check-circle" class="w-4 h-4"></i> કન્ફર્મ બુકિંગ
-                            </label>
-                            <label class="flex-1 flex items-center justify-center gap-1.5 p-2 rounded-xl border border-slate-200 text-xs font-bold cursor-pointer has-[:checked]:bg-amber-500 has-[:checked]:text-white has-[:checked]:border-amber-500 transition-all">
-                                <input type="radio" name="isConfirmed" value="false" class="hidden">
-                                <i data-lucide="help-circle" class="w-4 h-4"></i> માત્ર પૂછપરછ
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- MULTI-DATE SELECTION SECTION FOR THIS 1 CLIENT -->
-                <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-200/80 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <span class="text-xs font-bold text-blue-900 uppercase">પસંદ કરેલી ઇવેન્ટ તારીખો (Selected Dates for this Client)</span>
-                            <p class="text-[11px] text-blue-600">આ એક જ ક્લાયન્ટ માટે તમામ તારીખો એક સાથે બુક થશે</p>
-                        </div>
-                        <span id="dateCountBadge" class="text-xs font-bold bg-blue-600 text-white px-2.5 py-0.5 rounded-full">0 Days</span>
-                    </div>
-
-                    <!-- Selected Dates Chips Container -->
-                    <div id="selectedDatesChips" class="flex flex-wrap gap-2 min-h-[38px] p-2 bg-white rounded-xl border border-blue-100">
-                        <span class="text-xs text-slate-400 italic">કોઈ તારીખ પસંદ નથી. નીચે કેલેન્ડરમાંથી તારીખ પર ક્લિક કરો.</span>
-                    </div>
-
-                    <!-- Date Picker Tools: Add specific date + Quick buttons -->
-                    <div class="flex flex-wrap items-center gap-2 pt-1">
-                        <input type="date" id="datePickerInput" class="text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white">
-                        <button type="button" onclick="addDateFromInput()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg flex items-center gap-1">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> તારીખ ઉમેરો (+ Add Date)
-                        </button>
-                        <button type="button" onclick="addConsecutiveDay()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1">
-                            <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i> આગળનો દિવસ ઉમેરો (+ Next Day)
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Location / City -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">લોકેશન / વેન્યુ (Location / City)</label>
-                    <input type="text" id="clientLocation" placeholder="દા.ત. Grand Bhagwati Hall, Ahmedabad" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-
-                <!-- Financials -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">કુલ રકમ (Total Amount ₹)</label>
-                        <input type="number" id="totalAmount" placeholder="0" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">એડવાન્સ જમા (Advance Paid ₹)</label>
-                        <input type="number" id="advanceAmount" placeholder="0" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <!-- Notes / Shoot Details -->
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">શૂટિંગ વિગત / નોટ્સ (Package Notes)</label>
-                    <textarea id="clientNotes" rows="2" placeholder="દા.ત. 2 Candid Photographer, 1 Traditional 4K Video, Drone Shoot, 1 Album..." class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
-                </div>
-
-                <!-- Modal Action Buttons -->
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                    <button type="button" onclick="closeBookingModal()" class="px-4 py-2 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50">
-                        રદ કરો (Cancel)
-                    </button>
-                    <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-1.5">
-                        <i data-lucide="check" class="w-4 h-4"></i>
-                        <span>સેવ કરો (Save Booking)</span>
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
-    <!-- DELETE CONFIRMATION MODAL (જ્યાં જ્યાં જરૂર છે ત્યાં ડિલીટ ઓપ્શન) -->
-    <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-            <div class="p-6 text-center space-y-4">
-                <div class="w-14 h-14 bg-rose-100 text-rose-600 rounded-full mx-auto flex items-center justify-center shadow-inner">
-                    <i data-lucide="trash-2" class="w-7 h-7"></i>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900">શું તમે ખરેખર ડિલીટ કરવા માંગો છો?</h3>
-                    <p id="deleteModalMessage" class="text-sm text-slate-500 mt-1">આ બુકિંગ ડિલીટ કરવાથી કેલેન્ડરમાંથી તેની તમામ તારીખો ખાલી થઈ જશે.</p>
-                </div>
-                <div class="flex items-center justify-center gap-3 pt-2">
-                    <button onclick="closeDeleteModal()" class="px-5 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50">
-                        ના, પાછા જાઓ (Cancel)
-                    </button>
-                    <button onclick="executeDelete()" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold shadow-md transition-all flex items-center gap-1.5">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        <span>હા, ડિલીટ કરો (Delete)</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- REMOVE SINGLE DATE CONFIRMATION MODAL -->
-    <div id="removeDateModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-            <div class="p-6 text-center space-y-4">
-                <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-full mx-auto flex items-center justify-center shadow-inner">
-                    <i data-lucide="calendar-x" class="w-7 h-7"></i>
-                </div>
-                <div>
-                    <h3 class="text-lg font-bold text-slate-900">આ તારીખ દૂર કરવી છે?</h3>
-                    <p id="removeDateMessage" class="text-sm text-slate-500 mt-1">ક્લાયન્ટના ઇવેન્ટમાંથી આ ચોક્કસ તારીખ દૂર કરવામાં આવશે.</p>
-                </div>
-                <div class="flex items-center justify-center gap-3 pt-2">
-                    <button onclick="closeRemoveDateModal()" class="px-5 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50">
-                        Cancel
-                    </button>
-                    <button onclick="executeRemoveDate()" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-bold shadow-md transition-all">
-                        Remove Date
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toastNotification" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2 text-sm font-medium">
-        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
-        <span id="toastMessage">Done!</span>
-    </div>
-
+    <!-- JAVASCRIPT LOGIC -->
     <script>
         // -------------------------------------------------------------
-        // STATE & VARIABLES
+        // SERVICES & PRICING DEFINITIONS (1:1 with Android App StringsHelper)
         // -------------------------------------------------------------
+        const SERVICES = [
+            { id: 'candid_photo', nameGu: 'ક્રેન્ડિડ ફોટોગ્રાફી', nameEn: 'Candid Photography', icon: '📸', rate: 10000 },
+            { id: 'traditional_photo', nameGu: 'ટ્રેડિશનલ ફોટોગ્રાફી', nameEn: 'Traditional Photography', icon: '📷', rate: 7000 },
+            { id: 'cinematic_video', nameGu: 'સિનેમેટિક વિડીયોગ્રાફી', nameEn: 'Cinematic Videography', icon: '🎥', rate: 12000 },
+            { id: 'traditional_video', nameGu: 'ટ્રેડિશનલ વિડીયો', nameEn: 'Traditional Videography', icon: '📹', rate: 7000 },
+            { id: 'drone', nameGu: 'ડ્રોન પાયલોટ / શૂટ', nameEn: 'Drone Shoot', icon: '🚁', rate: 8000 },
+            { id: 'pre_wedding', nameGu: 'પ્રી-વેડિંગ શૂટ', nameEn: 'Pre-Wedding Shoot', icon: '💍', rate: 15000 }
+        ];
+
+        // Studio Info
+        const STUDIO_INFO = {
+            name: "Maruti Photo & Films",
+            phone: "9876543210",
+            address: "Ahmedabad, Gujarat"
+        };
+
+        // State Variables
+        let isGujarati = true;
         let currentYear = new Date().getFullYear();
-        let currentMonth = new Date().getMonth(); // 0-indexed
-        let selectedDate = new Date().toISOString().split('T')[0];
-        let currentFilter = 'ALL'; // ALL, CONFIRMED, INQUIRY
-        let searchQuery = '';
-        let modalSelectedDates = new Set();
-        let pendingDeleteId = null;
-        let pendingRemoveDateInfo = null; // { eventId, date }
+        let currentMonth = new Date().getMonth(); // 0 to 11
+        // Map: 'YYYY-MM-DD' -> serviceId
+        let selectedDatesMap = {};
+        // Set of blocked / already booked dates for demo/sample
+        const bookedDates = new Set();
+        let lastWhatsAppMessage = "";
 
-        // Local Storage fallback & initial data
-        const LOCAL_STORAGE_KEY = 'freelancer_calendar_events_v2';
-        let events = [];
+        // Month Names
+        const monthsGu = ["જાન્યુઆરી", "ફેબ્રુઆરી", "માર્ચ", "એપ્રિલ", "મે", "જૂન", "જુલાઈ", "ઓગસ્ટ", "સપ્ટેમ્બર", "ઓક્ટોબર", "નવેમ્બર", "ડિસેમ્બર"];
+        const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-        // -------------------------------------------------------------
-        // FIREBASE INITIALIZATION (free-lancing-calendar)
-        // -------------------------------------------------------------
-        let db = null;
-        try {
-            const firebaseConfig = {
-                projectId: "free-lancing-calendar"
-            };
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            db = firebase.firestore();
-            console.log("Firebase Firestore connected to free-lancing-calendar");
-        } catch (e) {
-            console.warn("Firebase initialization note: Local store will sync seamlessly.", e);
-        }
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            parseUrlParameters();
+            renderCalendar();
+            updateUIStrings();
+            lucide.createIcons();
+        });
 
-        // Initialize Data
-        function initData() {
-            // Load local cache first
-            const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (cached) {
-                try {
-                    events = JSON.parse(cached);
-                } catch(e) {
-                    events = [];
+        // Parse query params (e.g. ?dates=2026-11-15,2026-11-16&studio=Maruti)
+        function parseUrlParameters() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const datesParam = params.get('dates');
+                const studioParam = params.get('studio');
+
+                if (studioParam) {
+                    STUDIO_INFO.name = decodeURIComponent(studioParam);
+                    document.getElementById('headerStudioName').innerText = STUDIO_INFO.name;
                 }
-            }
 
-            // If empty, insert realistic sample
-            if (!events || events.length === 0) {
-                const today = new Date();
-                const d1 = new Date(today); d1.setDate(today.getDate() + 3);
-                const d2 = new Date(today); d2.setDate(today.getDate() + 4);
-                const d3 = new Date(today); d3.setDate(today.getDate() + 8);
-
-                events = [
-                    {
-                        id: "sample_1",
-                        clientName: "Rajesh & Priya Patel Wedding",
-                        phone: "9876543210",
-                        eventType: "Wedding",
-                        dates: [d1.toISOString().split('T')[0], d2.toISOString().split('T')[0]],
-                        location: "Shreeji Hall, Ahmedabad",
-                        totalAmount: 85000,
-                        advanceAmount: 30000,
-                        notes: "2 Candid, 1 Traditional 4K, Drone Shoot + Cinematic Teaser",
-                        isConfirmed: true,
-                        createdAt: Date.now()
-                    },
-                    {
-                        id: "sample_2",
-                        clientName: "Amit Shah Pre-Wedding",
-                        phone: "9825012345",
-                        eventType: "Pre-Wedding",
-                        dates: [d3.toISOString().split('T')[0]],
-                        location: "Polo Forest, Gujarat",
-                        totalAmount: 35000,
-                        advanceAmount: 15000,
-                        notes: "2 Outfit Changes, Reels & Cinematic Video",
-                        isConfirmed: true,
-                        createdAt: Date.now()
-                    }
-                ];
-                saveToLocalStorage();
-            }
-
-            // Subscribe to Firestore if accessible
-            if (db) {
-                try {
-                    db.collection("client_events").onSnapshot((snapshot) => {
-                        const remoteEvents = [];
-                        snapshot.forEach((doc) => {
-                            remoteEvents.push({ id: doc.id, ...doc.data() });
-                        });
-                        if (remoteEvents.length > 0) {
-                            events = remoteEvents;
-                            saveToLocalStorage();
-                            renderAll();
+                if (datesParam) {
+                    const parts = datesParam.split(',');
+                    parts.forEach(d => {
+                        const trimmed = d.trim();
+                        if (trimmed) {
+                            selectedDatesMap[trimmed] = 'candid_photo';
                         }
-                    }, (err) => {
-                        console.log("Firestore sync active locally: ", err.message);
                     });
-                } catch (e) {
-                    console.error("Firestore onSnapshot error:", e);
+                    // Navigate calendar to first selected date month
+                    if (parts.length > 0 && parts[0].includes('-')) {
+                        const dParts = parts[0].split('-');
+                        if (dParts.length === 3) {
+                            currentYear = parseInt(dParts[0]);
+                            currentMonth = parseInt(dParts[1]) - 1;
+                        }
+                    }
                 }
+            } catch (e) {
+                console.error("URL param parse error", e);
             }
-
-            renderAll();
         }
 
-        function saveToLocalStorage() {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(events));
+        // Toggle Language
+        function toggleLanguage() {
+            isGujarati = !isGujarati;
+            updateUIStrings();
+            renderCalendar();
+            renderSelectedServicesList();
         }
 
-        function showToast(message) {
-            const toast = document.getElementById('toastNotification');
-            const toastMsg = document.getElementById('toastMessage');
-            toastMsg.innerText = message;
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+        function updateUIStrings() {
+            document.getElementById('langButtonText').innerText = isGujarati ? "English" : "ગુજરાતી";
+            document.getElementById('portalSubBannerText').innerText = isGujarati
+                ? "🌟 ક્લાયન્ટ બુકિંગ પોર્ટલ • તારીખ અને શૂટિંગ સર્વિસ પસંદ કરો (Candid, Traditional, Video)"
+                : "🌟 Client Booking Portal • Pick Dates & Services (Candid, Traditional, Video)";
+            
+            document.getElementById('section1Title').innerText = isGujarati
+                ? "૧. કેલેન્ડરમાંથી તારીખો પસંદ કરો (ખાલી 🟢 તારીખ પર ટેપ કરો):"
+                : "1. Select Dates from Calendar (Tap open 🟢 dates):";
+
+            document.getElementById('todayButtonText').innerText = isGujarati ? "આજ (Today)" : "Today";
+            document.getElementById('legendFree').innerText = isGujarati ? "ઉપલબ્ધ (Open)" : "Open (Free)";
+            document.getElementById('legendBooked').innerText = isGujarati ? "બુક થયેલ 🔒" : "Blocked 🔒";
+            document.getElementById('legendSelected').innerText = isGujarati ? "પસંદ કરેલ" : "Selected";
+
+            document.getElementById('wdSun').innerText = isGujarati ? "રવિ" : "Sun";
+            document.getElementById('wdMon').innerText = isGujarati ? "સોમ" : "Mon";
+            document.getElementById('wdTue').innerText = isGujarati ? "મંગળ" : "Tue";
+            document.getElementById('wdWed').innerText = isGujarati ? "બુધ" : "Wed";
+            document.getElementById('wdThu').innerText = isGujarati ? "ગુરુ" : "Thu";
+            document.getElementById('wdFri').innerText = isGujarati ? "શુક્ર" : "Fri";
+            document.getElementById('wdSat').innerText = isGujarati ? "શનિ" : "Sat";
+
+            document.getElementById('section2Title').innerText = isGujarati ? "૨. તમારી વિગતો ભરો:" : "2. Enter Your Details:";
+            document.getElementById('labelName').innerText = isGujarati ? "તમારું નામ / ક્લાયન્ટનું નામ *" : "Your Name / Client Name *";
+            document.getElementById('labelPhone').innerText = isGujarati ? "મોબાઈલ નંબર (WhatsApp) *" : "Phone / WhatsApp Number *";
+            document.getElementById('labelLocation').innerText = isGujarati ? "સ્થળ / વેન્યુ / શહેર (Location / City) *" : "Venue / Location / City *";
+            document.getElementById('labelNotes').innerText = isGujarati ? "શૂટિંગ વિગત / વધારાની નોટ્સ (Optional)" : "Special Requirements / Notes (Optional)";
+
+            updateSubmitButtonText();
+            lucide.createIcons();
         }
 
-        // -------------------------------------------------------------
-        // CALENDAR RENDERING
-        // -------------------------------------------------------------
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        function updateSubmitButtonText() {
+            const count = Object.keys(selectedDatesMap).length;
+            const total = calculateTotalBudget();
+            const btn = document.getElementById('submitButtonText');
+            if (count === 0) {
+                btn.innerText = isGujarati ? "તારીખ પસંદ કરો 🚀" : "Pick Dates 🚀";
+            } else {
+                btn.innerText = isGujarati 
+                    ? `બુકિંગ ઇન્ક્વાયરી મોકલો (₹${total.toLocaleString('en-IN')} • ${count} દિવસ) 🚀`
+                    : `Submit Inquiry (₹${total.toLocaleString('en-IN')} • ${count} Days) 🚀`;
+            }
+        }
 
+        function calculateTotalBudget() {
+            let total = 0;
+            for (let date in selectedDatesMap) {
+                const sId = selectedDatesMap[date];
+                const sObj = SERVICES.find(s => s.id === sId) || SERVICES[0];
+                total += sObj.rate;
+            }
+            return total;
+        }
+
+        // Calendar Logic
         function renderCalendar() {
-            const monthYearEl = document.getElementById('calendarMonthYear');
-            monthYearEl.innerText = `${monthNames[currentMonth]} ${currentYear}`;
+            const monthText = isGujarati ? monthsGu[currentMonth] : monthsEn[currentMonth];
+            document.getElementById('currentMonthYearText').innerText = `${monthText} ${currentYear}`;
 
             const grid = document.getElementById('calendarDaysGrid');
             grid.innerHTML = '';
 
             const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay(); // 0 is Sunday
-            // Adjust so Monday is 0, Sunday is 6
-            const startCol = (firstDayIndex === 0) ? 6 : (firstDayIndex - 1);
-            const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
-
-            // Previous month fill
-            for (let i = 0; i < startCol; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'h-14 sm:h-16 p-1 border border-slate-100 bg-slate-50/40 rounded-xl opacity-30';
-                grid.appendChild(emptyCell);
-            }
-
-            // Map date string -> list of events
-            const dateToEvents = {};
-            events.forEach(evt => {
-                if (Array.isArray(evt.dates)) {
-                    evt.dates.forEach(d => {
-                        if (!dateToEvents[d]) dateToEvents[d] = [];
-                        dateToEvents[d].push(evt);
-                    });
-                }
-            });
-
+            const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
             const todayStr = new Date().toISOString().split('T')[0];
 
-            for (let day = 1; day <= totalDays; day++) {
-                const monthStr = String(currentMonth + 1).padStart(2, '0');
-                const dayStr = String(day).padStart(2, '0');
-                const dateISO = `${currentYear}-${monthStr}-${dayStr}`;
+            // Leading empty cells
+            for (let i = 0; i < firstDayIndex; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'h-11 sm:h-12 border border-slate-100 bg-slate-50/50 rounded-lg opacity-40';
+                grid.appendChild(empty);
+            }
 
-                const dayEvents = dateToEvents[dateISO] || [];
-                const isSelected = (selectedDate === dateISO);
+            // Days cells
+            for (let d = 1; d <= totalDaysInMonth; d++) {
+                const mStr = String(currentMonth + 1).padStart(2, '0');
+                const dStr = String(d).padStart(2, '0');
+                const dateISO = `${currentYear}-${mStr}-${dStr}`;
+
+                const isSelected = !!selectedDatesMap[dateISO];
+                const isBooked = bookedDates.has(dateISO);
                 const isToday = (todayStr === dateISO);
 
-                const hasConfirmed = dayEvents.some(e => e.isConfirmed);
-                const hasInquiry = dayEvents.some(e => !e.isConfirmed);
-
                 const cell = document.createElement('div');
-                cell.className = `h-14 sm:h-16 p-1.5 border rounded-xl cursor-pointer transition-all flex flex-col justify-between ${
-                    isSelected ? 'border-blue-600 bg-blue-50/70 shadow-sm ring-2 ring-blue-500/30' :
-                    isToday ? 'border-blue-300 bg-slate-50 font-bold' :
-                    'border-slate-100 hover:border-slate-300 hover:bg-slate-50'
+                cell.className = `h-11 sm:h-12 rounded-lg p-1 text-center flex flex-col items-center justify-between cursor-pointer transition-all border ${
+                    isSelected ? 'bg-amber-500 border-amber-600 text-slate-950 font-bold shadow-sm' :
+                    isBooked ? 'bg-rose-50 border-rose-200 text-rose-700 cursor-not-allowed opacity-80' :
+                    isToday ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold' :
+                    'bg-emerald-50/60 border-emerald-100 hover:border-emerald-300 text-slate-800'
                 }`;
 
                 cell.onclick = () => {
-                    selectedDate = dateISO;
-                    document.getElementById('selectedDateBannerText').innerText = `પસંદ કરેલ તારીખ: ${formatDisplayDate(dateISO)} (${dayEvents.length} ઇવેન્ટ)`;
+                    if (isBooked) {
+                        alert(isGujarati ? "આ તારીખ પહેલેથી જ બુક થયેલી છે 🔒" : "This date is already booked / blocked 🔒");
+                        return;
+                    }
+                    if (selectedDatesMap[dateISO]) {
+                        delete selectedDatesMap[dateISO];
+                    } else {
+                        selectedDatesMap[dateISO] = 'candid_photo';
+                    }
                     renderCalendar();
-                    renderEventsList();
+                    renderSelectedServicesList();
                 };
 
-                let badgesHtml = '';
-                if (dayEvents.length > 0) {
-                    badgesHtml = `
-                        <div class="flex flex-col gap-0.5 overflow-hidden">
-                            ${dayEvents.slice(0, 2).map(e => `
-                                <div class="text-[10px] truncate px-1 py-0.2 rounded font-semibold ${e.isConfirmed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                                    ${e.clientName.split(' ')[0]}
-                                </div>
-                            `).join('')}
-                            ${dayEvents.length > 2 ? `<div class="text-[9px] text-slate-500 font-bold">+${dayEvents.length - 2} more</div>` : ''}
-                        </div>
-                    `;
-                }
-
                 cell.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold ${isSelected ? 'text-blue-700 font-bold' : isToday ? 'text-blue-600' : 'text-slate-700'}">${day}</span>
-                        ${dayEvents.length > 0 ? `
-                            <div class="flex items-center gap-1">
-                                ${hasConfirmed ? '<span class="w-2 h-2 rounded-full bg-emerald-500"></span>' : ''}
-                                ${hasInquiry ? '<span class="w-2 h-2 rounded-full bg-amber-500"></span>' : ''}
-                            </div>
-                        ` : ''}
+                    <span class="text-xs ${isSelected ? 'font-extrabold text-white' : ''}">${d}</span>
+                    <div class="text-[9px]">
+                        ${isSelected ? '<span class="text-white text-[10px]">✓</span>' :
+                          isBooked ? '<span class="text-rose-600 font-bold">🔒</span>' :
+                          '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>'}
                     </div>
-                    ${badgesHtml}
                 `;
 
                 grid.appendChild(cell);
             }
+
+            renderSelectedServicesList();
         }
 
         function changeMonth(delta) {
@@ -631,479 +485,171 @@
             const now = new Date();
             currentYear = now.getFullYear();
             currentMonth = now.getMonth();
-            selectedDate = now.toISOString().split('T')[0];
-            document.getElementById('selectedDateBannerText').innerText = `પસંદ કરેલ તારીખ: આજ (Today)`;
             renderCalendar();
-            renderEventsList();
         }
 
-        // -------------------------------------------------------------
-        // STATS COMPUTATION
-        // -------------------------------------------------------------
-        function updateStats() {
-            const confirmedCount = events.filter(e => e.isConfirmed).length;
-            const totalAdvance = events.reduce((sum, e) => sum + (Number(e.advanceAmount) || 0), 0);
-            const totalRevenue = events.reduce((sum, e) => sum + (Number(e.totalAmount) || 0), 0);
-            const pendingAmount = Math.max(0, totalRevenue - totalAdvance);
-
-            document.getElementById('statTotalClients').innerText = events.length;
-            document.getElementById('statConfirmedEvents').innerText = confirmedCount;
-            document.getElementById('statAdvancePaid').innerText = `₹${totalAdvance.toLocaleString('en-IN')}`;
-            document.getElementById('statPendingAmount').innerText = `₹${pendingAmount.toLocaleString('en-IN')}`;
+        function clearAllSelections() {
+            selectedDatesMap = {};
+            renderCalendar();
         }
 
-        // -------------------------------------------------------------
-        // CLIENT EVENTS LIST & SEARCH & FILTER
-        // -------------------------------------------------------------
-        function setFilter(filter) {
-            currentFilter = filter;
-            document.getElementById('filterAll').className = filter === 'ALL' ?
-                'flex-1 py-1.5 px-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition-all' :
-                'flex-1 py-1.5 px-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all';
-            document.getElementById('filterConfirmed').className = filter === 'CONFIRMED' ?
-                'flex-1 py-1.5 px-2 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm transition-all' :
-                'flex-1 py-1.5 px-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all';
-            document.getElementById('filterInquiry').className = filter === 'INQUIRY' ?
-                'flex-1 py-1.5 px-2 rounded-xl text-xs font-bold bg-amber-600 text-white shadow-sm transition-all' :
-                'flex-1 py-1.5 px-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all';
+        // Render Service list per date
+        function renderSelectedServicesList() {
+            const dates = Object.keys(selectedDatesMap).sort();
+            const container = document.getElementById('selectedServicesContainer');
+            const helper = document.getElementById('emptySelectHelper');
+            const list = document.getElementById('selectedDateCardsList');
 
-            renderEventsList();
-        }
-
-        function handleSearch() {
-            searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
-            renderEventsList();
-        }
-
-        function formatDisplayDate(dateStr) {
-            if (!dateStr) return '';
-            try {
-                const parts = dateStr.split('-');
-                if (parts.length === 3) {
-                    const d = new Date(parts[0], parts[1] - 1, parts[2]);
-                    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-                }
-            } catch(e) {}
-            return dateStr;
-        }
-
-        function renderEventsList() {
-            const container = document.getElementById('eventsListContainer');
-            container.innerHTML = '';
-
-            let filtered = events.filter(e => {
-                if (currentFilter === 'CONFIRMED' && !e.isConfirmed) return false;
-                if (currentFilter === 'INQUIRY' && e.isConfirmed) return false;
-                if (searchQuery) {
-                    const matchName = (e.clientName || '').toLowerCase().includes(searchQuery);
-                    const matchPhone = (e.phone || '').includes(searchQuery);
-                    const matchLoc = (e.location || '').toLowerCase().includes(searchQuery);
-                    const matchType = (e.eventType || '').toLowerCase().includes(searchQuery);
-                    if (!matchName && !matchPhone && !matchLoc && !matchType) return false;
-                }
-                return true;
-            });
-
-            // Sort: events on selected date first, then by earliest date
-            filtered.sort((a, b) => {
-                const aHasSelected = a.dates && a.dates.includes(selectedDate);
-                const bHasSelected = b.dates && b.dates.includes(selectedDate);
-                if (aHasSelected && !bHasSelected) return -1;
-                if (!aHasSelected && bHasSelected) return 1;
-                return (b.createdAt || 0) - (a.createdAt || 0);
-            });
-
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-2xl p-8 border border-slate-200 text-center space-y-2">
-                        <i data-lucide="folder-search" class="w-10 h-10 text-slate-300 mx-auto"></i>
-                        <p class="text-sm font-bold text-slate-700">કોઈ રેકોર્ડ મળ્યો નથી (No Bookings Found)</p>
-                        <p class="text-xs text-slate-400">'નવું બુકિંગ ઉમેરો' બટન પર ક્લિક કરીને ક્લાયન્ટ ઉમેરો.</p>
-                    </div>
-                `;
-                lucide.createIcons();
+            if (dates.length === 0) {
+                container.classList.add('hidden');
+                helper.classList.remove('hidden');
+                updateSubmitButtonText();
                 return;
             }
 
-            filtered.forEach(evt => {
-                const total = Number(evt.totalAmount) || 0;
-                const advance = Number(evt.advanceAmount) || 0;
-                const pending = Math.max(0, total - advance);
-                const datesCount = (evt.dates || []).length;
+            container.classList.remove('hidden');
+            helper.classList.add('hidden');
+            list.innerHTML = '';
+
+            document.getElementById('selectedServicesHeading').innerText = isGujarati
+                ? `પસંદ કરેલી તારીખો અને સર્વિસ (${dates.length} દિવસ):`
+                : `Selected Dates & Services (${dates.length} Days):`;
+
+            dates.forEach(dateKey => {
+                const currentServiceId = selectedDatesMap[dateKey];
+                const currentService = SERVICES.find(s => s.id === currentServiceId) || SERVICES[0];
 
                 const card = document.createElement('div');
-                card.className = "bg-white rounded-2xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-3";
+                card.className = "bg-white p-3 rounded-xl border border-amber-200/80 shadow-sm space-y-2";
 
-                // Multi-date chips HTML for this single client
-                const datesChipsHtml = (evt.dates || []).map(d => `
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200">
-                        <i data-lucide="calendar" class="w-3 h-3 text-slate-500"></i>
-                        ${formatDisplayDate(d)}
-                        ${datesCount > 1 ? `
-                            <button onclick="requestRemoveDate('${evt.id}', '${d}')" title="આ તારીખ દૂર કરો" class="text-rose-500 hover:text-rose-700 ml-1">
-                                <i data-lucide="x" class="w-3 h-3"></i>
-                            </button>
-                        ` : ''}
-                    </span>
-                `).join('');
+                // Formatted date string
+                const dObj = new Date(dateKey);
+                const dayNum = dObj.getDate();
+                const mName = isGujarati ? monthsGu[dObj.getMonth()] : monthsEn[dObj.getMonth()];
+                const dateDisplay = `${dayNum} ${mName} ${dObj.getFullYear()}`;
 
                 card.innerHTML = `
-                    <!-- Header -->
-                    <div class="flex items-start justify-between gap-2">
-                        <div>
-                            <h4 class="font-bold text-slate-900 text-base leading-tight">${evt.clientName}</h4>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-xs font-bold text-blue-600">${evt.eventType || 'Event'}</span>
-                                ${evt.location ? `
-                                    <span class="text-xs text-slate-400 flex items-center gap-0.5">
-                                        <i data-lucide="map-pin" class="w-3 h-3"></i> ${evt.location}
-                                    </span>
-                                ` : ''}
-                            </div>
-                        </div>
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${
-                            evt.isConfirmed ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                        }">
-                            <i data-lucide="${evt.isConfirmed ? 'check-circle' : 'clock'}" class="w-3.5 h-3.5"></i>
-                            ${evt.isConfirmed ? 'કન્ફર્મ' : 'ઇન્ક્વાયરી'}
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                            📅 <span>${dateDisplay}</span>
                         </span>
-                    </div>
-
-                    <!-- Single Client Multi-Dates Badges Section -->
-                    <div class="space-y-1.5">
-                        <div class="flex items-center justify-between text-xs font-bold text-slate-500">
-                            <span>ઇવેન્ટ તારીખો (${datesCount} Days Event):</span>
-                        </div>
-                        <div class="flex flex-wrap gap-1.5">
-                            ${datesChipsHtml}
-                        </div>
-                    </div>
-
-                    <!-- Financials -->
-                    <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs text-center">
-                        <div>
-                            <span class="text-slate-400 block text-[10px]">કુલ (Total)</span>
-                            <span class="font-bold text-slate-800">₹${total.toLocaleString('en-IN')}</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 block text-[10px]">એડવાન્સ</span>
-                            <span class="font-bold text-emerald-600">₹${advance.toLocaleString('en-IN')}</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 block text-[10px]">બાકી (Pending)</span>
-                            <span class="font-bold ${pending > 0 ? 'text-amber-600' : 'text-slate-500'}">₹${pending.toLocaleString('en-IN')}</span>
-                        </div>
-                    </div>
-
-                    ${evt.notes ? `
-                        <p class="text-xs text-slate-500 italic bg-amber-50/50 p-2 rounded-lg border border-amber-100">
-                            <strong>નોંધ:</strong> ${evt.notes}
-                        </p>
-                    ` : ''}
-
-                    <!-- Action Buttons: Phone, WhatsApp, Edit, and DELETE BUTTON -->
-                    <div class="flex items-center justify-between pt-2 border-t border-slate-100">
-                        <div class="flex items-center gap-1.5">
-                            ${evt.phone ? `
-                                <a href="tel:${evt.phone}" class="p-2 text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors" title="Call">
-                                    <i data-lucide="phone" class="w-4 h-4"></i>
-                                </a>
-                                <a href="https://wa.me/91${evt.phone.replace(/\\D/g, '')}" target="_blank" class="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors" title="WhatsApp">
-                                    <i data-lucide="message-square" class="w-4 h-4"></i>
-                                </a>
-                            ` : ''}
-                            <button onclick="openBookingModalForEdit('${evt.id}')" class="p-2 text-slate-600 hover:text-indigo-600 bg-slate-100 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit">
-                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
+                                ₹${currentService.rate.toLocaleString('en-IN')}
+                            </span>
+                            <button onclick="removeDate('${dateKey}')" class="text-rose-500 hover:text-rose-700 text-xs font-bold p-1">
+                                ✕
                             </button>
                         </div>
+                    </div>
 
-                        <!-- PROMINENT DELETE BUTTON -->
-                        <button onclick="requestDeleteEvent('${evt.id}', '${evt.clientName}')" class="px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-all flex items-center gap-1.5 shadow-sm">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                            <span>ડિલીટ કરો (Delete)</span>
-                        </button>
+                    <div class="text-[11px] text-slate-500">
+                        ${isGujarati ? "આ દિવસ માટે સર્વિસ પસંદ કરો:" : "Select service for this day:"}
+                    </div>
+
+                    <!-- Service Pills -->
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        ${SERVICES.map(s => {
+                            const isChosen = (s.id === currentServiceId);
+                            const sName = isGujarati ? s.nameGu : s.nameEn;
+                            return `
+                                <button type="button" onclick="setServiceForDate('${dateKey}', '${s.id}')" class="text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-all ${
+                                    isChosen ? 'bg-slate-900 border-slate-900 text-amber-300 font-bold shadow-sm' :
+                                    'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                                }">
+                                    ${s.icon} ${sName} (₹${s.rate.toLocaleString('en-IN')})
+                                </button>
+                            `;
+                        }).join('')}
                     </div>
                 `;
 
-                container.appendChild(card);
+                list.appendChild(card);
             });
 
+            // Update Total Estimate
+            const total = calculateTotalBudget();
+            document.getElementById('totalEstimateAmount').innerText = `₹${total.toLocaleString('en-IN')}`;
+            updateSubmitButtonText();
             lucide.createIcons();
         }
 
-        // -------------------------------------------------------------
-        // MULTI-DATE MODAL MANAGEMENT
-        // -------------------------------------------------------------
-        function openBookingModal() {
-            document.getElementById('eventId').value = '';
-            document.getElementById('clientName').value = '';
-            document.getElementById('clientPhone').value = '';
-            document.getElementById('clientLocation').value = '';
-            document.getElementById('totalAmount').value = '';
-            document.getElementById('advanceAmount').value = '';
-            document.getElementById('clientNotes').value = '';
-            document.getElementById('eventType').value = 'Wedding';
-            document.querySelector('input[name="isConfirmed"][value="true"]').checked = true;
-
-            modalSelectedDates = new Set();
-            if (selectedDate) {
-                modalSelectedDates.add(selectedDate);
-            } else {
-                modalSelectedDates.add(new Date().toISOString().split('T')[0]);
-            }
-
-            document.getElementById('modalTitle').innerText = "નવું ક્લાયન્ટ બુકિંગ (New Client Booking)";
-            renderModalDatesChips();
-            document.getElementById('bookingModal').classList.remove('hidden');
-            lucide.createIcons();
+        function setServiceForDate(dateKey, serviceId) {
+            selectedDatesMap[dateKey] = serviceId;
+            renderSelectedServicesList();
         }
 
-        function openBookingModalForSelectedDate() {
-            openBookingModal();
-            modalSelectedDates = new Set([selectedDate]);
-            renderModalDatesChips();
+        function removeDate(dateKey) {
+            delete selectedDatesMap[dateKey];
+            renderCalendar();
         }
 
-        function openBookingModalForEdit(eventId) {
-            const evt = events.find(e => e.id === eventId);
-            if (!evt) return;
-
-            document.getElementById('eventId').value = evt.id;
-            document.getElementById('clientName').value = evt.clientName || '';
-            document.getElementById('clientPhone').value = evt.phone || '';
-            document.getElementById('clientLocation').value = evt.location || '';
-            document.getElementById('totalAmount').value = evt.totalAmount || '';
-            document.getElementById('advanceAmount').value = evt.advanceAmount || '';
-            document.getElementById('clientNotes').value = evt.notes || '';
-            document.getElementById('eventType').value = evt.eventType || 'Wedding';
-
-            if (evt.isConfirmed) {
-                document.querySelector('input[name="isConfirmed"][value="true"]').checked = true;
-            } else {
-                document.querySelector('input[name="isConfirmed"][value="false"]').checked = true;
-            }
-
-            modalSelectedDates = new Set(evt.dates || []);
-            document.getElementById('modalTitle').innerText = "બુકિંગ એડિટ કરો (Edit Booking)";
-            renderModalDatesChips();
-            document.getElementById('bookingModal').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function closeBookingModal() {
-            document.getElementById('bookingModal').classList.add('hidden');
-        }
-
-        function renderModalDatesChips() {
-            const container = document.getElementById('selectedDatesChips');
-            const countBadge = document.getElementById('dateCountBadge');
-            container.innerHTML = '';
-
-            const datesArr = Array.from(modalSelectedDates).sort();
-            countBadge.innerText = `${datesArr.length} Day(s)`;
-
-            if (datesArr.length === 0) {
-                container.innerHTML = `<span class="text-xs text-rose-500 font-semibold italic">કૃપા કરીને ઓછામાં ઓછી ૧ તારીખ પસંદ કરો.</span>`;
-                return;
-            }
-
-            datesArr.forEach(d => {
-                const chip = document.createElement('span');
-                chip.className = "inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-900 border border-blue-200 rounded-lg text-xs font-bold";
-                chip.innerHTML = `
-                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-600"></i>
-                    <span>${formatDisplayDate(d)}</span>
-                    <button type="button" onclick="removeModalDate('${d}')" class="text-blue-500 hover:text-rose-600 ml-1">
-                        <i data-lucide="x" class="w-3 h-3"></i>
-                    </button>
-                `;
-                container.appendChild(chip);
-            });
-
-            lucide.createIcons();
-        }
-
-        function removeModalDate(d) {
-            modalSelectedDates.delete(d);
-            renderModalDatesChips();
-        }
-
-        function addDateFromInput() {
-            const input = document.getElementById('datePickerInput');
-            if (input.value) {
-                modalSelectedDates.add(input.value);
-                renderModalDatesChips();
-            }
-        }
-
-        function addConsecutiveDay() {
-            const datesArr = Array.from(modalSelectedDates).sort();
-            let baseDate = new Date();
-            if (datesArr.length > 0) {
-                baseDate = new Date(datesArr[datesArr.length - 1]);
-            }
-            baseDate.setDate(baseDate.getDate() + 1);
-            const nextDateStr = baseDate.toISOString().split('T')[0];
-            modalSelectedDates.add(nextDateStr);
-            renderModalDatesChips();
-            showToast(`તારીખ ${formatDisplayDate(nextDateStr)} ઉમેરાઈ ગઈ.`);
-        }
-
-        // SAVE EVENT
-        async function handleSaveEvent(e) {
+        // Form Submission & WhatsApp Redirect
+        function handleInquirySubmit(e) {
             e.preventDefault();
 
-            if (modalSelectedDates.size === 0) {
-                alert("મહેરબાની કરીને ઓછામાં ઓછી ૧ તારીખ પસંદ કરો.");
+            const dates = Object.keys(selectedDatesMap).sort();
+            if (dates.length === 0) {
+                alert(isGujarati ? "કૃપા કરીને કેલેન્ડરમાંથી ઓછામાં ઓછી ૧ તારીખ પસંદ કરો!" : "Please select at least 1 date from the calendar!");
                 return;
             }
 
-            const eventId = document.getElementById('eventId').value;
-            const clientName = document.getElementById('clientName').value.trim();
-            const phone = document.getElementById('clientPhone').value.trim();
-            const eventType = document.getElementById('eventType').value;
-            const location = document.getElementById('clientLocation').value.trim();
-            const totalAmount = parseFloat(document.getElementById('totalAmount').value) || 0;
-            const advanceAmount = parseFloat(document.getElementById('advanceAmount').value) || 0;
-            const notes = document.getElementById('clientNotes').value.trim();
-            const isConfirmed = document.querySelector('input[name="isConfirmed"]:checked').value === 'true';
+            const clientName = document.getElementById('inputClientName').value.trim();
+            const clientPhone = document.getElementById('inputClientPhone').value.trim();
+            const clientLoc = document.getElementById('inputClientLocation').value.trim();
+            const clientNotes = document.getElementById('inputClientNotes').value.trim();
 
-            const newEvent = {
-                id: eventId || ('evt_' + Date.now()),
-                clientName,
-                phone,
-                eventType,
-                dates: Array.from(modalSelectedDates).sort(),
-                location,
-                totalAmount,
-                advanceAmount,
-                notes,
-                isConfirmed,
-                createdAt: eventId ? (events.find(ev => ev.id === eventId)?.createdAt || Date.now()) : Date.now()
-            };
-
-            // Save to Firestore if connected
-            if (db) {
-                try {
-                    await db.collection("client_events").doc(newEvent.id).set(newEvent);
-                } catch (err) {
-                    console.warn("Firestore save fallback to local:", err.message);
-                }
+            if (!clientName || !clientPhone) {
+                alert(isGujarati ? "કૃપા કરીને નામ અને ફોન નંબર ભરો!" : "Please fill in your name and phone number!");
+                return;
             }
 
-            // Update local state
-            const idx = events.findIndex(ev => ev.id === newEvent.id);
-            if (idx >= 0) {
-                events[idx] = newEvent;
-            } else {
-                events.unshift(newEvent);
-            }
+            const total = calculateTotalBudget();
 
-            saveToLocalStorage();
-            closeBookingModal();
-            renderAll();
-            showToast(`'${newEvent.clientName}' નું બુકિંગ સેવ થઈ ગયું!`);
-        }
+            // Format breakdown
+            const breakdownLines = dates.map(d => {
+                const sId = selectedDatesMap[d];
+                const sObj = SERVICES.find(s => s.id === sId) || SERVICES[0];
+                const sName = isGujarati ? s.nameGu : s.nameEn;
+                return `• ${d}: ${sObj.icon} ${sName} (₹${sObj.rate.toLocaleString('en-IN')})`;
+            }).join('\n');
 
-        // -------------------------------------------------------------
-        // DELETE OPTIONS (જ્યાં જ્યાં જરૂર છે ત્યાં ડિલીટ ઓપ્શન)
-        // -------------------------------------------------------------
-        function requestDeleteEvent(id, clientName) {
-            pendingDeleteId = id;
-            document.getElementById('deleteModalMessage').innerText = `શું તમે ખરેખર '${clientName}' નું બુકિંગ સંપૂર્ણ ડિલીટ કરવા માંગો છો? આનાથી તેની તમામ તારીખો કેલેન્ડરમાંથી ખાલી થઈ જશે.`;
-            document.getElementById('deleteModal').classList.remove('hidden');
+            // Build pre-formatted WhatsApp Message
+            lastWhatsAppMessage = 
+`🙏 *નવું શૂટિંગ બુકિંગ ઇન્ક્વાયરી*
+📸 *${STUDIO_INFO.name}*
+
+👤 *ક્લાયન્ટ નામ:* ${clientName}
+📞 *મોબાઈલ નંબર:* ${clientPhone}
+📍 *સ્થળ / વેન્યુ:* ${clientLoc}
+
+📅 *પસંદ કરેલી તારીખો અને સર્વિસ (${dates.length} દિવસ):*
+${breakdownLines}
+
+💰 *કુલ અંદાજિત બજેટ:* ₹${total.toLocaleString('en-IN')}
+${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
+કૃપા કરીને આ તારીખ કન્ફર્મ કરવા જણાવશો. આભાર!`;
+
+            // Populate Modal Summary
+            document.getElementById('modalSummaryClient').innerText = `${isGujarati ? 'ક્લાયન્ટ' : 'Client'}: ${clientName} (${clientPhone})`;
+            document.getElementById('modalSummaryDates').innerText = `${isGujarati ? 'તારીખો' : 'Dates'}: ${dates.join(', ')}`;
+            document.getElementById('modalSummaryTotal').innerText = `${isGujarati ? 'અંદાજિત બજેટ' : 'Total Budget'}: ₹${total.toLocaleString('en-IN')}`;
+
+            // Show Success Modal
+            document.getElementById('successModal').classList.remove('hidden');
             lucide.createIcons();
         }
 
-        function closeDeleteModal() {
-            pendingDeleteId = null;
-            document.getElementById('deleteModal').classList.add('hidden');
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
         }
 
-        async function executeDelete() {
-            if (!pendingDeleteId) return;
-            const idToDelete = pendingDeleteId;
-
-            if (db) {
-                try {
-                    await db.collection("client_events").doc(idToDelete).delete();
-                } catch(e) {
-                    console.warn("Firestore delete fallback:", e.message);
-                }
-            }
-
-            events = events.filter(e => e.id !== idToDelete);
-            saveToLocalStorage();
-            closeDeleteModal();
-            renderAll();
-            showToast("બુકિંગ સફળતાપૂર્વક ડિલીટ કરી દીધું.");
+        function openDirectWhatsApp() {
+            const studioPhone = STUDIO_INFO.phone.replace(/[^0-9]/g, '');
+            const encoded = encodeURIComponent(lastWhatsAppMessage);
+            const waUrl = `https://api.whatsapp.com/send?phone=91${studioPhone}&text=${encoded}`;
+            window.open(waUrl, '_blank');
         }
-
-        // REMOVE SPECIFIC DATE FROM MULTI-DAY EVENT
-        function requestRemoveDate(eventId, date) {
-            const evt = events.find(e => e.id === eventId);
-            if (!evt) return;
-            pendingRemoveDateInfo = { eventId, date };
-            document.getElementById('removeDateMessage').innerText = `શું તમે '${evt.clientName}' માંથી ${formatDisplayDate(date)} ની તારીખ દૂર કરવા માંગો છો?`;
-            document.getElementById('removeDateModal').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function closeRemoveDateModal() {
-            pendingRemoveDateInfo = null;
-            document.getElementById('removeDateModal').classList.add('hidden');
-        }
-
-        async function executeRemoveDate() {
-            if (!pendingRemoveDateInfo) return;
-            const { eventId, date } = pendingRemoveDateInfo;
-
-            const evt = events.find(e => e.id === eventId);
-            if (evt) {
-                const updatedDates = evt.dates.filter(d => d !== date);
-                if (updatedDates.length === 0) {
-                    // Delete entire event if no dates left
-                    await executeDeleteSingle(eventId);
-                } else {
-                    evt.dates = updatedDates;
-                    if (db) {
-                        try {
-                            await db.collection("client_events").doc(eventId).update({ dates: updatedDates });
-                        } catch(e) {
-                            console.warn("Firestore date remove update fallback:", e.message);
-                        }
-                    }
-                    saveToLocalStorage();
-                }
-            }
-
-            closeRemoveDateModal();
-            renderAll();
-            showToast(`તારીખ ${formatDisplayDate(date)} દૂર કરવામાં આવી.`);
-        }
-
-        async function executeDeleteSingle(id) {
-            if (db) {
-                try { await db.collection("client_events").doc(id).delete(); } catch(e) {}
-            }
-            events = events.filter(e => e.id !== id);
-            saveToLocalStorage();
-        }
-
-        // -------------------------------------------------------------
-        // RENDER ALL
-        // -------------------------------------------------------------
-        function renderAll() {
-            updateStats();
-            renderCalendar();
-            renderEventsList();
-            lucide.createIcons();
-        }
-
-        // Start
-        window.onload = () => {
-            initData();
-        };
     </script>
 </body>
 </html>

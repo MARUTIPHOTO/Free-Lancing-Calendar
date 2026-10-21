@@ -60,6 +60,10 @@ object AdMobInterstitialHelper {
   private var isAdLoading = false
 
   fun loadAd(context: Context, onLoaded: (() -> Unit)? = null) {
+    if (isRunningOnEmulator()) {
+      onLoaded?.invoke()
+      return
+    }
     if (interstitialAd != null || isAdLoading) return
 
     isAdLoading = true

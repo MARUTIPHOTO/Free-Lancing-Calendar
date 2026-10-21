@@ -43,6 +43,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import com.example.data.local.StudioDatabase
 import com.example.data.repository.StudioRepository
 import com.example.ui.components.BulkDateActionDialog
@@ -71,11 +74,24 @@ class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
 
-    // Initialize Google Mobile Ads (AdMob)
-    try {
-      MobileAds.initialize(this) {}
-    } catch (e: Exception) {
-      // Ignored in test/preview environment
+    // Initialize Google Mobile Ads (AdMob) on physical Android devices
+    if (!com.example.ui.components.isRunningOnEmulator()) {
+      try {
+        val testConfig = com.google.android.gms.ads.RequestConfiguration.Builder()
+          .setTestDeviceIds(listOf(com.google.android.gms.ads.AdRequest.DEVICE_ID_EMULATOR))
+          .build()
+        MobileAds.setRequestConfiguration(testConfig)
+      } catch (e: Exception) {
+        // Ignored
+      }
+
+      CoroutineScope(Dispatchers.IO).launch {
+        try {
+          MobileAds.initialize(this@MainActivity) {}
+        } catch (e: Exception) {
+          // Ignored in test/preview environment
+        }
+      }
     }
 
     val database = StudioDatabase.getDatabase(applicationContext)
