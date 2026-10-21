@@ -255,7 +255,7 @@ class StudioRepository(private val dao: StudioDao) {
       "MarutiStudio"
     }
     val datesParam = if (dateKeys.isEmpty()) "" else dateKeys.sorted().joinToString(",")
-    return "https://free-lancing-calendar.web.app/?dates=$datesParam&studio=$encodedStudio"
+    return "https://marutiphoto.github.io/Free-Lancing-Calendar/public/?dates=$datesParam&studio=$encodedStudio"
   }
 
   fun generateBookingLink(dateKey: String, studioName: String): String {
