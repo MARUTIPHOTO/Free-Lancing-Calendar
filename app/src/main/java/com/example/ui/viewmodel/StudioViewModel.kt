@@ -457,6 +457,21 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     }
   }
 
+  fun deleteInquiry(inquiry: InquiryEntity) {
+    viewModelScope.launch {
+      repository.declineInquiry(inquiry.id, inquiry.dateKey, makeFree = true)
+      if (_bannerNotification.value?.id == inquiry.id) {
+        _bannerNotification.value = null
+      }
+    }
+  }
+
+  fun deleteOrCancelBooking(dateKeys: List<String>) {
+    viewModelScope.launch {
+      repository.deleteBookingDates(dateKeys)
+    }
+  }
+
   fun markInquiryRead(inquiryId: Long) {
     viewModelScope.launch {
       repository.markInquiryAsRead(inquiryId)

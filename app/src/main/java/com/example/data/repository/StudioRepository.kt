@@ -176,11 +176,51 @@ class StudioRepository(private val dao: StudioDao) {
 
   suspend fun declineInquiry(inquiryId: Long, dateKey: String, makeFree: Boolean) {
     dao.deleteInquiry(inquiryId)
-    if (makeFree) {
-      markDateFree(dateKey, note = "Free after inquiry declined")
+    val keys = if (dateKey.contains(",")) {
+      dateKey.split(",").map { it.trim() }.filter { it.isNotEmpty() }
     } else {
-      resetDate(dateKey)
+      listOf(dateKey)
     }
+    keys.forEach { key ->
+      if (makeFree) {
+        val existing = dao.getDate(key)
+        val entity = (existing ?: StudioDateEntity(dateKey = key)).copy(
+          status = DateStatus.FREE.name,
+          clientName = "",
+          clientPhone = "",
+          eventType = "",
+          location = "",
+          advanceAmount = 0.0,
+          totalPackageAmount = 0.0,
+          customNote = "Free after inquiry deleted",
+          updatedAt = System.currentTimeMillis()
+        )
+        dao.upsertDate(entity)
+      } else {
+        resetDate(key)
+      }
+    }
+  }
+
+  suspend fun deleteBookingDates(dateKeys: List<String>) {
+    val entities = dateKeys.map { key ->
+      val existing = dao.getDate(key)
+      (existing ?: StudioDateEntity(dateKey = key)).copy(
+        status = DateStatus.FREE.name,
+        clientName = "",
+        clientPhone = "",
+        eventType = "",
+        location = "",
+        advanceAmount = 0.0,
+        totalPackageAmount = 0.0,
+        customNote = "Free after booking cancellation",
+        bookingSourceStudio = "",
+        shiftType = "",
+        gearRequired = "",
+        updatedAt = System.currentTimeMillis()
+      )
+    }
+    dao.upsertDates(entities)
   }
 
   suspend fun markInquiryAsRead(inquiryId: Long) {
@@ -215,7 +255,7 @@ class StudioRepository(private val dao: StudioDao) {
       "MarutiStudio"
     }
     val datesParam = if (dateKeys.isEmpty()) "" else dateKeys.sorted().joinToString(",")
-    return "https://gen-lang-client-0524337453.web.app/?dates=$datesParam&studio=$encodedStudio"
+    return "https://free-lancing-calendar.web.app/?dates=$datesParam&studio=$encodedStudio"
   }
 
   fun generateBookingLink(dateKey: String, studioName: String): String {

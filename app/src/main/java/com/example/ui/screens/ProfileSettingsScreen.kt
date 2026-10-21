@@ -71,6 +71,7 @@ import com.example.data.model.DateStatus
 import com.example.ui.util.StringsHelper
 import com.example.ui.viewmodel.CalendarUiState
 import com.example.ui.viewmodel.StudioViewModel
+import com.example.ui.components.AppOpenAdDialog
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -85,6 +86,15 @@ fun ProfileSettingsScreen(
   val isHindi = profile.selectedLanguage == "HI" || profile.selectedLanguage == "GU"
   val isGujarati = isHindi
 
+  var showAdPreview by remember { mutableStateOf(false) }
+
+  if (showAdPreview) {
+    AppOpenAdDialog(
+      isHindi = isHindi,
+      onCloseAndEnterApp = { showAdPreview = false }
+    )
+  }
+
   var studioName by remember(profile) { mutableStateOf(profile.studioName) }
   var ownerName by remember(profile) { mutableStateOf(profile.ownerName) }
   var phone by remember(profile) { mutableStateOf(profile.phone) }
@@ -93,6 +103,12 @@ fun ProfileSettingsScreen(
   var roleSpecialization by remember(profile) { mutableStateOf(profile.roleSpecialization) }
   var cameraGear by remember(profile) { mutableStateOf(profile.cameraGear) }
   var defaultDayRate by remember(profile) { mutableStateOf(if (profile.defaultDayRate > 0) profile.defaultDayRate.toInt().toString() else "7000") }
+  var rateTraditionalPhoto by remember(profile) { mutableStateOf(profile.rateTraditionalPhoto.toInt().toString()) }
+  var rateCandidPhoto by remember(profile) { mutableStateOf(profile.rateCandidPhoto.toInt().toString()) }
+  var rateCinematicVideo by remember(profile) { mutableStateOf(profile.rateCinematicVideo.toInt().toString()) }
+  var rateTraditionalVideo by remember(profile) { mutableStateOf(profile.rateTraditionalVideo.toInt().toString()) }
+  var rateDrone by remember(profile) { mutableStateOf(profile.rateDrone.toInt().toString()) }
+  var ratePreWedding by remember(profile) { mutableStateOf(profile.ratePreWedding.toInt().toString()) }
   var customTemplateGu by remember(profile) { mutableStateOf(profile.customTemplateGu) }
   var customTemplateEn by remember(profile) { mutableStateOf(profile.customTemplateEn) }
   var selectedLanguage by remember(profile) { mutableStateOf(if (profile.selectedLanguage == "GU") "HI" else profile.selectedLanguage) }
@@ -361,12 +377,101 @@ fun ProfileSettingsScreen(
     OutlinedTextField(
       value = defaultDayRate,
       onValueChange = { defaultDayRate = it },
-      label = { Text(if (isHindi) "डे शिफ्ट चार्ज / रेट (₹ प्रति दिन)" else "Default Day Shift Rate (₹ / Day)") },
+      label = { Text(if (isHindi) "डे बेस चार्ज (₹ प्रति दिन)" else "Base Day Rate (₹ / Day)") },
       leadingIcon = { Icon(Icons.Default.CurrencyRupee, contentDescription = null) },
       keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
       singleLine = true,
       modifier = Modifier.fillMaxWidth().testTag("profile_day_rate_input")
     )
+
+    Spacer(modifier = Modifier.height(12.dp))
+
+    // 5.1 Service Rates Card (Candid, Traditional, Cinematic, Drone, etc.)
+    Card(
+      modifier = Modifier.fillMaxWidth(),
+      shape = RoundedCornerShape(12.dp),
+      colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)),
+      border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFDE68A))
+    ) {
+      Column(modifier = Modifier.padding(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Text(
+            text = if (isHindi) "💰 सर्विस रेट कार्ड (प्रति दिन चार्ज)" else "💰 Service Rate Card (Per Day Charge)",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF78350F)
+          )
+        }
+        Text(
+          text = if (isHindi) "क्लाइंट बुकिंग में तारीख के अनुसार यह चार्ज अपने आप जुड़ेगा" else "These rates apply automatically when clients pick services per date",
+          fontSize = 10.sp,
+          color = Color(0xFF92400E)
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          OutlinedTextField(
+            value = rateCandidPhoto,
+            onValueChange = { rateCandidPhoto = it },
+            label = { Text("📸 Candid (₹)", fontSize = 11.sp) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.weight(1f)
+          )
+          OutlinedTextField(
+            value = rateTraditionalPhoto,
+            onValueChange = { rateTraditionalPhoto = it },
+            label = { Text("📷 Traditional (₹)", fontSize = 11.sp) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.weight(1f)
+          )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          OutlinedTextField(
+            value = rateCinematicVideo,
+            onValueChange = { rateCinematicVideo = it },
+            label = { Text("🎥 Cinematic (₹)", fontSize = 11.sp) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.weight(1f)
+          )
+          OutlinedTextField(
+            value = rateTraditionalVideo,
+            onValueChange = { rateTraditionalVideo = it },
+            label = { Text("📹 Video (₹)", fontSize = 11.sp) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.weight(1f)
+          )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          OutlinedTextField(
+            value = rateDrone,
+            onValueChange = { rateDrone = it },
+            label = { Text("🚁 Drone (₹)", fontSize = 11.sp) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.weight(1f)
+          )
+          OutlinedTextField(
+            value = ratePreWedding,
+            onValueChange = { ratePreWedding = it },
+            label = { Text("💍 Pre-Wedding (₹)", fontSize = 11.sp) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.weight(1f)
+          )
+        }
+      }
+    }
 
     Spacer(modifier = Modifier.height(16.dp))
 
@@ -522,12 +627,66 @@ fun ProfileSettingsScreen(
       )
     }
 
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Google AdMob Ads Status & Testing Card
+    Card(
+      modifier = Modifier.fillMaxWidth(),
+      colors = CardDefaults.cardColors(containerColor = Color(0xFFF8FAFC)),
+      shape = RoundedCornerShape(12.dp),
+      border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0))
+    ) {
+      Column(modifier = Modifier.padding(14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Icon(Icons.Default.FlashOn, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(18.dp))
+          Spacer(modifier = Modifier.width(6.dp))
+          Text(
+            text = if (isHindi) "Google AdMob Testing (બંને એડ ચાલુ છે ✅)" else "Google AdMob Testing (Both Ads Active ✅)",
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp,
+            color = Color(0xFF0F172A)
+          )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+          text = if (isHindi)
+            "૧. એપ ઓપન બેનર (ક્લોઝ '✕' કરી એપમાં એન્ટર થવાય)\n૨. નીચેનું ફિક્સ બેનર (ડિસ્ટર્બ કર્યા વગર રહે)"
+          else
+            "1. App Open Ad Banner (with close '✕' to enter app)\n2. Persistent Bottom Banner (without disturbing app)",
+          fontSize = 12.sp,
+          color = Color(0xFF475569),
+          lineHeight = 17.sp
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        OutlinedButton(
+          onClick = { showAdPreview = true },
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(38.dp)
+            .testTag("btn_test_open_ad_preview"),
+          shape = RoundedCornerShape(8.dp)
+        ) {
+          Text(
+            text = if (isHindi) "📢 એપ ખોલતાંની એડ ફરી ટેસ્ટ કરો (Test Open Ad)" else "📢 Test Launch Ad Again",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold
+          )
+        }
+      }
+    }
+
     Spacer(modifier = Modifier.height(20.dp))
 
     // Save Button
     Button(
       onClick = {
         val rate = defaultDayRate.toDoubleOrNull() ?: 7000.0
+        val rCandid = rateCandidPhoto.toDoubleOrNull() ?: 10000.0
+        val rTrad = rateTraditionalPhoto.toDoubleOrNull() ?: 7000.0
+        val rCine = rateCinematicVideo.toDoubleOrNull() ?: 12000.0
+        val rTradVid = rateTraditionalVideo.toDoubleOrNull() ?: 7000.0
+        val rDrone = rateDrone.toDoubleOrNull() ?: 8000.0
+        val rPre = ratePreWedding.toDoubleOrNull() ?: 15000.0
         val updated = StudioProfileEntity(
           id = 1,
           studioName = studioName,
@@ -541,7 +700,13 @@ fun ProfileSettingsScreen(
           roleSpecialization = roleSpecialization,
           cameraGear = cameraGear,
           defaultDayRate = rate,
-          isFreelancer = true
+          isFreelancer = true,
+          rateTraditionalPhoto = rTrad,
+          rateCandidPhoto = rCandid,
+          rateCinematicVideo = rCine,
+          rateTraditionalVideo = rTradVid,
+          rateDrone = rDrone,
+          ratePreWedding = rPre
         )
         viewModel.updateProfile(updated)
         Toast.makeText(

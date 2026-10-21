@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -109,6 +110,7 @@ fun DateDetailDialog(
 
   var isEventTypeExpanded by remember { mutableStateOf(false) }
   val eventOptions = if (isHindi) StringsHelper.eventTypesHi else StringsHelper.eventTypesEn
+  var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
   ModalBottomSheet(
     onDismissRequest = onDismiss,
@@ -427,15 +429,14 @@ fun DateDetailDialog(
         if (studioDate != null) {
           OutlinedButton(
             onClick = {
-              onReset(dateKey)
-              onDismiss()
+              showDeleteConfirmDialog = true
             },
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
             modifier = Modifier.weight(1f).testTag("reset_date_button")
           ) {
             Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(4.dp))
-            Text(if (isHindi) "रीसेट करें" else "Reset")
+            Text(if (isHindi) "ડિલીટ / રીસેટ" else "Delete / Reset")
           }
         }
 
@@ -475,6 +476,55 @@ fun DateDetailDialog(
 
       Spacer(modifier = Modifier.height(24.dp))
     }
+  }
+
+  if (showDeleteConfirmDialog) {
+    val formattedDate = StringsHelper.formatDateChip(dateKey)
+    AlertDialog(
+      onDismissRequest = { showDeleteConfirmDialog = false },
+      icon = {
+        Icon(
+          Icons.Default.Delete,
+          contentDescription = null,
+          tint = Color(0xFFDC2626),
+          modifier = Modifier.size(32.dp)
+        )
+      },
+      title = {
+        Text(
+          text = if (isHindi) "તારીખ $formattedDate ડિલીટ / રીસેટ કરવી છે?" else "Delete / Reset Date $formattedDate?",
+          fontWeight = FontWeight.Bold,
+          fontSize = 16.sp
+        )
+      },
+      text = {
+        Text(
+          text = if (isHindi)
+            "શું તમે ખરેખર આ તારીખ [$formattedDate] નું સ્ટેટસ અને બુકિંગ ડિલીટ કરવા માંગો છો? આ તારીખ કેલેન્ડરમાં પાછી Free (🟢 લીલી) થઈ જશે."
+          else
+            "Are you sure you want to delete and reset date [$formattedDate]? It will turn back to Free (🟢 Green).",
+          fontSize = 13.sp
+        )
+      },
+      confirmButton = {
+        Button(
+          onClick = {
+            showDeleteConfirmDialog = false
+            onReset(dateKey)
+            onDismiss()
+          },
+          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+          modifier = Modifier.testTag("confirm_date_reset_btn")
+        ) {
+          Text(if (isHindi) "હા, ડિલીટ કરો" else "Yes, Delete", color = Color.White)
+        }
+      },
+      dismissButton = {
+        OutlinedButton(onClick = { showDeleteConfirmDialog = false }) {
+          Text(if (isHindi) "ના / રદ્દ કરો" else "Cancel")
+        }
+      }
+    )
   }
 }
 

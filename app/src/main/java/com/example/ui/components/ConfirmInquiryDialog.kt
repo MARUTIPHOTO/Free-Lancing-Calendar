@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,7 +41,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.InquiryEntity
+import com.example.ui.util.StringsHelper
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ConfirmInquiryDialog(
   inquiry: InquiryEntity,
@@ -46,8 +51,17 @@ fun ConfirmInquiryDialog(
   onDismiss: () -> Unit,
   onConfirmDone: (advanceAmount: Double, totalAmount: Double) -> Unit
 ) {
+  val prefilledTotal = remember(inquiry) {
+    val regex = "₹([0-9]+)".toRegex()
+    val match = regex.find(inquiry.notes) ?: regex.find(inquiry.eventType)
+    match?.groupValues?.get(1) ?: ""
+  }
   var advanceInput by remember { mutableStateOf("") }
-  var totalInput by remember { mutableStateOf("") }
+  var totalInput by remember { mutableStateOf(prefilledTotal) }
+
+  val datesList = remember(inquiry.dateKey) {
+    StringsHelper.parseDateKeys(inquiry.dateKey)
+  }
 
   AlertDialog(
     onDismissRequest = onDismiss,
@@ -70,8 +84,8 @@ fun ConfirmInquiryDialog(
     },
     title = {
       Text(
-        text = if (isGujarati) "बुकिंग कन्फर्म करें (Done 🔴)" else "Confirm Booking (Done 🔴)",
-        fontSize = 18.sp,
+        text = if (isGujarati) "पूछताछ स्वीकार और बुक करें (Accept 🔴)" else "Accept & Confirm Booking (Accept 🔴)",
+        fontSize = 17.sp,
         fontWeight = FontWeight.Bold
       )
     },
@@ -79,46 +93,85 @@ fun ConfirmInquiryDialog(
       Column(modifier = Modifier.fillMaxWidth()) {
         Text(
           text = if (isGujarati)
-            "इस पूछताछ को 'Done' करने से यह तारीख लाल (🔴 Booked) हो जाएगी:"
+            "स्वीकार करने से नीचे की सभी (${datesList.size}) तारीखें कैलेंडर में लाल (🔴 Booked) हो जाएंगी:"
           else
-            "Confirming this will mark the date as Booked (🔴 Red):",
+            "Accepting will mark all (${datesList.size}) date(s) as Booked (🔴 Red) in the calendar:",
           fontSize = 12.sp,
           color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Client info card
+        // Client info & Date chips card
         Box(
           modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(10.dp))
             .background(Color(0xFFF1F5F9))
             .padding(10.dp)
         ) {
           Column {
             Text(
               text = "👤 ${inquiry.clientName}",
-              fontSize = 13.sp,
+              fontSize = 14.sp,
               fontWeight = FontWeight.Bold,
               color = Color(0xFF0F172A)
             )
-            Text(
-              text = "📞 ${inquiry.clientPhone}",
-              fontSize = 12.sp,
-              color = Color(0xFF334155)
-            )
-            Text(
-              text = "📅 ${inquiry.dateKey} ${if (inquiry.eventType.isNotBlank()) "• " + inquiry.eventType else ""}",
-              fontSize = 12.sp,
-              color = Color(0xFF334155)
-            )
+            if (inquiry.eventType.isNotBlank()) {
+              Text(
+                text = "📸 ${inquiry.eventType}",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFFD97706)
+              )
+            }
+            if (inquiry.clientPhone.isNotBlank()) {
+              Text(
+                text = "📞 ${inquiry.clientPhone}",
+                fontSize = 12.sp,
+                color = Color(0xFF334155)
+              )
+            }
             if (inquiry.location.isNotBlank()) {
               Text(
                 text = "📍 ${inquiry.location}",
                 fontSize = 11.sp,
                 color = Color(0xFF64748B)
               )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Dates Badge List
+            Text(
+              text = if (isGujarati) "📅 चुनी हुई तारीखें (${datesList.size} दिन):" else "📅 Selected Dates (${datesList.size} Days):",
+              fontSize = 11.sp,
+              fontWeight = FontWeight.Bold,
+              color = Color(0xFF991B1B)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            FlowRow(
+              horizontalArrangement = Arrangement.spacedBy(4.dp),
+              verticalArrangement = Arrangement.spacedBy(4.dp),
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              datesList.forEach { dateKey ->
+                val formatted = StringsHelper.formatDateChip(dateKey)
+                Surface(
+                  shape = RoundedCornerShape(4.dp),
+                  color = Color(0xFFDC2626)
+                ) {
+                  Text(
+                    text = formatted,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                  )
+                }
+              }
             }
           }
         }
@@ -129,7 +182,7 @@ fun ConfirmInquiryDialog(
         OutlinedTextField(
           value = advanceInput,
           onValueChange = { advanceInput = it },
-          label = { Text(if (isGujarati) "टोकन / एडवांस राशि (₹)" else "Advance Token (₹)") },
+          label = { Text(if (isGujarati) "एडवांस टोकन राशि (₹)" else "Advance Token (₹)") },
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
           singleLine = true,
           modifier = Modifier.fillMaxWidth().testTag("confirm_advance_input")
@@ -160,7 +213,7 @@ fun ConfirmInquiryDialog(
         modifier = Modifier.testTag("confirm_done_final_button")
       ) {
         Text(
-          text = if (isGujarati) "Done (कन्फर्म करें 🔴)" else "Done (Confirm 🔴)",
+          text = if (isGujarati) "स्वीकारें और बुक करें (${datesList.size} दिन 🔴)" else "Accept & Book All (${datesList.size} Days 🔴)",
           color = Color.White,
           fontWeight = FontWeight.Bold
         )

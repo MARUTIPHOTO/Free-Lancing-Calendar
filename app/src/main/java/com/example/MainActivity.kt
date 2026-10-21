@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -33,6 +34,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -58,10 +62,21 @@ import com.example.ui.viewmodel.BulkActionType
 import com.example.ui.viewmodel.StudioViewModel
 import com.example.ui.viewmodel.StudioViewModelFactory
 
+import com.example.ui.components.AdMobBanner
+import com.example.ui.components.AppOpenAdDialog
+import com.google.android.gms.ads.MobileAds
+
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+
+    // Initialize Google Mobile Ads (AdMob)
+    try {
+      MobileAds.initialize(this) {}
+    } catch (e: Exception) {
+      // Ignored in test/preview environment
+    }
 
     val database = StudioDatabase.getDatabase(applicationContext)
     val repository = StudioRepository(database.studioDao())
@@ -82,6 +97,9 @@ fun MainAppContent(viewModel: StudioViewModel) {
   val isHindi = uiState.profile.selectedLanguage == "HI" || uiState.profile.selectedLanguage == "GU"
   val isGujarati = isHindi
 
+  // App launch ad banner state (defaults to false so app view is immediately visible on launch just like preview)
+  var showLaunchAd by rememberSaveable { mutableStateOf(false) }
+
   // Handle hardware back button
   if (uiState.currentNav != AppNavDestination.CALENDAR) {
     BackHandler {
@@ -95,10 +113,14 @@ fun MainAppContent(viewModel: StudioViewModel) {
   Scaffold(
     modifier = Modifier.fillMaxSize(),
     bottomBar = {
-      NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.testTag("bottom_nav_bar")
-      ) {
+      Column(modifier = Modifier.fillMaxWidth()) {
+        // Official Google AdMob Test Banner (displayed at bottom without disturbing content)
+        AdMobBanner()
+
+        NavigationBar(
+          containerColor = MaterialTheme.colorScheme.surface,
+          modifier = Modifier.testTag("bottom_nav_bar")
+        ) {
         // 1. Calendar Tab
         NavigationBarItem(
           selected = uiState.currentNav == AppNavDestination.CALENDAR,
@@ -225,6 +247,7 @@ fun MainAppContent(viewModel: StudioViewModel) {
         )
       }
     }
+  }
   ) { innerPadding ->
     Box(
       modifier = Modifier
@@ -366,6 +389,16 @@ fun MainAppContent(viewModel: StudioViewModel) {
                 note = note
               )
             }
+          }
+        )
+      }
+
+      // Dialog 6: App Open Ad Banner (Ad on launch with close button to enter app)
+      if (showLaunchAd) {
+        AppOpenAdDialog(
+          isHindi = isHindi,
+          onCloseAndEnterApp = {
+            showLaunchAd = false
           }
         )
       }

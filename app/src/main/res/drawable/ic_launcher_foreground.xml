@@ -4,51 +4,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Calendar card background -->
     <path
-        android:fillColor="#F8FAFC"
-        android:pathData="M33,30h42c4.4,0 8,3.6 8,8v34c0,4.4 -3.6,8 -8,8H33c-4.4,0 -8,-3.6 -8,-8V38c0,-4.4 3.6,-8 8,-8z" />
-    
-    <!-- Calendar header bar (Studio Amber Gold) -->
-    <path
-        android:fillColor="#F59E0B"
-        android:pathData="M33,30h42c4.4,0 8,3.6 8,8v7H25V38c0,-4.4 3.6,-8 8,-8z" />
-    
-    <!-- Calendar binder rings -->
-    <path
-        android:fillColor="#CBD5E1"
-        android:pathData="M37,25h4v9h-4z M67,25h4v9h-4z" />
-    
-    <!-- Camera body inside calendar -->
-    <path
-        android:fillColor="#0F172A"
-        android:pathData="M40,51h28c1.7,0 3,1.3 3,3v18c0,1.7 -1.3,3 -3,3H40c-1.7,0 -3,-1.3 -3,-3V54c0,-1.7 1.3,-3 3,-3z" />
-    <path
-        android:fillColor="#0F172A"
-        android:pathData="M48,48h12l2,3H46z" />
-    
-    <!-- Camera lens ring -->
-    <path
-        android:fillColor="#F59E0B"
-        android:pathData="M54,55a8,8 0 1,0 0.001,0z" />
-    <path
-        android:fillColor="#0F172A"
-        android:pathData="M54,57.5a5.5,5.5 0 1,0 0.001,0z" />
-    <path
-        android:fillColor="#38BDF8"
-        android:pathData="M52,60a2,2 0 1,0 0.001,0z" />
-
-    <!-- 3 Signature Status Dots (Green = Free, Yellow = Inquiry, Red = Booked) -->
-    <!-- Green (Free) -->
-    <path
-        android:fillColor="#22C55E"
-        android:pathData="M34,42a3.5,3.5 0 1,0 0.001,0z" />
-    <!-- Yellow (Inquiry) -->
-    <path
-        android:fillColor="#EAB308"
-        android:pathData="M54,42a3.5,3.5 0 1,0 0.001,0z" />
-    <!-- Red (Booked) -->
-    <path
-        android:fillColor="#EF4444"
-        android:pathData="M74,42a3.5,3.5 0 1,0 0.001,0z" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M38,24h32v8h-32zM32,36h44c3.3,0 6,2.7 6,6v36c0,3.3 -2.7,6 -6,6H32c-3.3,0 -6,-2.7 -6,-6V42c0,-3.3 2.7,-6 6,-6zm4,14h10v10H36V50zm16,0h10v10H52V50zm16,0h10v10H68V50zm-32,16h10v10H36V66zm16,0h10v10H52V66zm16,0h10v10H68V66z" />
 </vector>

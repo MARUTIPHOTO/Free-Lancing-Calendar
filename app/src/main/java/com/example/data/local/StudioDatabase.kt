@@ -16,7 +16,7 @@ import java.time.LocalDate
     InquiryEntity::class,
     StudioProfileEntity::class
   ],
-  version = 2,
+  version = 3,
   exportSchema = false
 )
 abstract class StudioDatabase : RoomDatabase() {
@@ -57,8 +57,8 @@ abstract class StudioDatabase : RoomDatabase() {
       dao.upsertProfile(
         StudioProfileEntity(
           id = 1,
-          studioName = "Sanjay Patel | Freelance Photographer",
-          ownerName = "Sanjay Patel",
+          studioName = "Free Lancing Calendar",
+          ownerName = "Free Lancing Calendar",
           phone = "+91 98250 12345",
           address = "Surat / Ahmedabad, Gujarat",
           instagram = "@sanjay_cinematography",
@@ -68,7 +68,13 @@ abstract class StudioDatabase : RoomDatabase() {
           roleSpecialization = "Candid Photography • Cinematic Video • Drone Operator",
           cameraGear = "Sony A7IV, 24-70mm GM II, 70-200mm, DJI RS3 Gimbal, DJI Mini 4 Pro Drone",
           defaultDayRate = 7000.0,
-          isFreelancer = true
+          isFreelancer = true,
+          rateTraditionalPhoto = 7000.0,
+          rateCandidPhoto = 10000.0,
+          rateCinematicVideo = 12000.0,
+          rateTraditionalVideo = 7000.0,
+          rateDrone = 8000.0,
+          ratePreWedding = 15000.0
         )
       )
 
