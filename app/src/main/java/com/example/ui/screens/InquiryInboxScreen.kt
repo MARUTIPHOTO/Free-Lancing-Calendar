@@ -26,7 +26,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -35,7 +36,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -123,7 +123,7 @@ fun InquiryInboxScreen(
         onClick = { viewModel.navigateTo(AppNavDestination.CALENDAR) },
         modifier = Modifier.size(36.dp)
       ) {
-        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
       }
 
       Spacer(modifier = Modifier.width(6.dp))
@@ -142,10 +142,33 @@ fun InquiryInboxScreen(
         )
       }
 
+      // Test Notification Button
+      IconButton(
+        onClick = {
+          val testInquiry = InquiryEntity(
+            id = System.currentTimeMillis(),
+            dateKey = "2026-11-20",
+            clientName = "Rajesh Patel (ટેસ્ટ ક્લાયન્ટ)",
+            clientPhone = "9876543210",
+            eventType = "Wedding Shoot (શૂટિંગ)",
+            location = "Ahmedabad (અમદાવાદ)",
+            notes = "ટેસ્ટ નોટિફિકેશન ચેક (Test Notification)",
+            isConfirmed = false,
+            isRead = false,
+            createdAt = System.currentTimeMillis()
+          )
+          com.example.util.NotificationHelper.showInquiryNotification(context, testInquiry)
+          Toast.makeText(context, "🔔 નોટિફિકેશન મોકલાયું! ઉપર સ્ટેટસ બાર ચેક કરો.", Toast.LENGTH_SHORT).show()
+        },
+        modifier = Modifier.size(36.dp)
+      ) {
+        Icon(Icons.Default.NotificationsActive, contentDescription = "Test Notification", tint = Color(0xFFD97706))
+      }
+
       // Refresh Button
       IconButton(
         onClick = {
-          Toast.makeText(context, if (isHindi) "नई पूछताछ जाँची जा रही है... 🔄" else "Checking for new inquiries... 🔄", Toast.LENGTH_SHORT).show()
+          Toast.makeText(context, if (isHindi) "ઇન્ક્વાયરી ચેક થઈ રહી છે... 🔄" else "Checking for new inquiries... 🔄", Toast.LENGTH_SHORT).show()
           viewModel.syncManager?.let { sm ->
             coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
               sm.manualRefresh()
@@ -164,7 +187,7 @@ fun InquiryInboxScreen(
         modifier = Modifier.height(30.dp)
       ) {
         Text(
-          text = if (isHindi) "EN" else "हिन्दी",
+          text = if (isHindi) "EN" else "ગુજરાતી",
           fontSize = 11.sp,
           fontWeight = FontWeight.Bold
         )
@@ -318,7 +341,7 @@ fun InquiryInboxScreen(
       onDismissRequest = { inquiryToUnaccept = null },
       icon = {
         Icon(
-          imageVector = if (isAlreadyConfirmed) Icons.Default.Undo else Icons.Default.Close,
+          imageVector = if (isAlreadyConfirmed) Icons.AutoMirrored.Filled.Undo else Icons.Default.Close,
           contentDescription = null,
           tint = Color(0xFFDC2626),
           modifier = Modifier.size(36.dp)
@@ -679,7 +702,7 @@ private fun InquiryCard(
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
             modifier = Modifier.weight(1.3f).height(34.dp).testTag("inquiry_unaccept_booked_btn")
           ) {
-            Icon(Icons.Default.Undo, contentDescription = null, modifier = Modifier.size(13.dp))
+            Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = null, modifier = Modifier.size(13.dp))
             Spacer(modifier = Modifier.width(3.dp))
             Text(
               text = if (isHindi) "Unaccept / रद्द करें" else "Unaccept Booking",

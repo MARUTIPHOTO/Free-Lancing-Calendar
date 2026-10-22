@@ -152,28 +152,29 @@ class FirestoreSyncManager(
         val doc = item.optJSONObject("document") ?: continue
         val fields = doc.optJSONObject("fields") ?: continue
 
-        val clientName = fields.optJSONObject("clientName")?.optString("stringValue") ?: ""
-        val clientPhone = fields.optJSONObject("clientPhone")?.optString("stringValue") ?: ""
+        val clientName = fields.optJSONObject("clientName")?.optString("stringValue")?.trim() ?: ""
+        val clientPhone = fields.optJSONObject("clientPhone")?.optString("stringValue")?.trim() ?: ""
         val status = fields.optJSONObject("status")?.optString("stringValue") ?: "PENDING"
         val location = fields.optJSONObject("location")?.optString("stringValue") ?: ""
         val notes = fields.optJSONObject("notes")?.optString("stringValue") ?: ""
-        val dates = fields.optJSONObject("dates")?.optString("stringValue") ?: ""
+        val rawDates = fields.optJSONObject("dates")?.optString("stringValue")?.trim() ?: ""
+        val effectiveDates = if (rawDates.isNotBlank()) rawDates else "General Inquiry (સામાન્ય ઇન્ક્વાયરી)"
         val eventType = fields.optJSONObject("eventType")?.optString("stringValue") ?: "Online Inquiry"
 
         val createdAtRaw = fields.optJSONObject("createdAt")?.optString("integerValue")
         val createdAt = createdAtRaw?.toLongOrNull() ?: System.currentTimeMillis()
 
-        if (clientPhone.isNotBlank() && dates.isNotBlank()) {
+        if (clientPhone.isNotBlank()) {
           // Check if already in local SQLite database
           val alreadySaved = existingInquiries.any {
-            it.clientPhone == clientPhone && it.dateKey == dates
+            it.clientPhone.trim() == clientPhone && (it.dateKey.trim() == effectiveDates || it.dateKey.trim() == rawDates)
           }
 
           if (!alreadySaved) {
             val isConfirmedState = (status == "CONFIRMED")
             val newInquiry = InquiryEntity(
-              dateKey = dates,
-              clientName = clientName.ifBlank { "Client" },
+              dateKey = effectiveDates,
+              clientName = clientName.ifBlank { "Client (${clientPhone})" },
               clientPhone = clientPhone,
               eventType = eventType,
               location = location,

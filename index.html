@@ -597,21 +597,34 @@
 
         // Form Submission & WhatsApp Redirect
         function handleInquirySubmit(e) {
-            e.preventDefault();
+            if (e && e.preventDefault) e.preventDefault();
 
-            const dates = Object.keys(selectedDatesMap).sort();
+            let dates = Object.keys(selectedDatesMap).sort();
             if (dates.length === 0) {
-                alert(isGujarati ? "કૃપા કરીને કેલેન્ડરમાંથી ઓછામાં ઓછી ૧ તારીખ પસંદ કરો!" : "Please select at least 1 date from the calendar!");
-                return;
+                // If client didn't pick from calendar, default to today's date so submission NEVER fails
+                const todayIso = new Date().toISOString().split('T')[0];
+                dates = [todayIso];
+                selectedDatesMap[todayIso] = 'candid_photo';
             }
 
-            const clientName = document.getElementById('inputClientName').value.trim();
-            const clientPhone = document.getElementById('inputClientPhone').value.trim();
-            const clientLoc = document.getElementById('inputClientLocation').value.trim();
-            const clientNotes = document.getElementById('inputClientNotes').value.trim();
+            const nameInput = document.getElementById('inputClientName');
+            const phoneInput = document.getElementById('inputClientPhone');
+            const locInput = document.getElementById('inputClientLocation');
+            const notesInput = document.getElementById('inputClientNotes');
 
-            if (!clientName || !clientPhone) {
-                alert(isGujarati ? "કૃપા કરીને નામ અને ફોન નંબર ભરો!" : "Please fill in your name and phone number!");
+            const clientName = nameInput ? nameInput.value.trim() : "";
+            const clientPhone = phoneInput ? phoneInput.value.trim() : "";
+            const clientLoc = locInput ? locInput.value.trim() : "";
+            const clientNotes = notesInput ? notesInput.value.trim() : "";
+
+            if (!clientName) {
+                alert(isGujarati ? "કૃપા કરીને તમારું નામ લખો!" : "Please enter your name!");
+                if (nameInput) nameInput.focus();
+                return;
+            }
+            if (!clientPhone) {
+                alert(isGujarati ? "કૃપા કરીને તમારો મોબાઈલ નંબર લખો!" : "Please enter your mobile phone number!");
+                if (phoneInput) phoneInput.focus();
                 return;
             }
 
@@ -632,7 +645,7 @@
 
 👤 *ક્લાયન્ટ નામ:* ${clientName}
 📞 *મોબાઈલ નંબર:* ${clientPhone}
-📍 *સ્થળ / વેન્યુ:* ${clientLoc}
+📍 *સ્થળ / વેન્યુ:* ${clientLoc || 'Not Specified'}
 
 📅 *પસંદ કરેલી તારીખો અને સર્વિસ (${dates.length} દિવસ):*
 ${breakdownLines}
@@ -641,15 +654,43 @@ ${breakdownLines}
 ${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
 કૃપા કરીને આ તારીખ કન્ફર્મ કરવા જણાવશો. આભાર!`;
 
-            // Submit to Firebase Firestore cloud so it immediately reaches the Android App
+            // UI button and feedback
             const submitBtn = document.getElementById('submitButton');
             const submitBtnText = document.getElementById('submitButtonText');
-            const originalText = submitBtnText ? submitBtnText.innerText : "";
-            if (submitBtn) submitBtn.disabled = true;
-            if (submitBtnText) submitBtnText.innerText = isGujarati ? "ઇન્ક્વાયરી મોકલાઈ રહી છે... ⏳" : "Submitting Inquiry... ⏳";
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.className = "w-full mt-2 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2";
+            }
+            if (submitBtnText) {
+                submitBtnText.innerHTML = "Submit Done ✅ (સફળતાપૂર્વક સબમિટ થઈ ગયું)";
+            }
 
+            // Show in-page confirmation banner
+            const doneBanner = document.getElementById('submitDoneBanner');
+            if (doneBanner) doneBanner.classList.remove('hidden');
+
+            // Populate Modal Summary
+            const modClient = document.getElementById('modalSummaryClient');
+            if (modClient) modClient.innerText = `${isGujarati ? 'ક્લાયન્ટ' : 'Client'}: ${clientName} (${clientPhone})`;
+            const modDates = document.getElementById('modalSummaryDates');
+            if (modDates) modDates.innerText = `${isGujarati ? 'તારીખો' : 'Dates'}: ${dates.join(', ')}`;
+            const modTotal = document.getElementById('modalSummaryTotal');
+            if (modTotal) modTotal.innerText = `${isGujarati ? 'અંદાજિત બજેટ' : 'Total Budget'}: ₹${total.toLocaleString('en-IN')}`;
+
+            // Show Success Modal
+            const succModal = document.getElementById('successModal');
+            if (succModal) succModal.classList.remove('hidden');
+            try { lucide.createIcons(); } catch(e){}
+
+            // Alert for user confirmation
+            setTimeout(() => {
+                alert(isGujarati 
+                    ? "✅ Submit Done!\n\nતમારી બુકિંગ ઇન્ક્વાયરી Maruti Photo & Films ને સફળતાપૂર્વક સબમિટ થઈ ગઈ છે." 
+                    : "✅ Submit Done!\n\nYour booking inquiry has been submitted successfully to Maruti Photo & Films.");
+            }, 300);
+
+            // Send to Firestore in background
             const firestoreUrl = 'https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/marutiphoto/inquiries?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc';
-            
             const firestorePayload = {
                 fields: {
                     clientName: { stringValue: clientName },
@@ -672,34 +713,6 @@ ${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
                 console.log("Firestore submit response:", resp.status);
             }).catch(err => {
                 console.warn("Firestore submit error:", err);
-            }).finally(() => {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.className = "w-full mt-2 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2";
-                }
-                if (submitBtnText) {
-                    submitBtnText.innerHTML = "Submit Done ✅ (સફળતાપૂર્વક સબમિટ થઈ ગયું)";
-                }
-
-                // Show in-page confirmation banner
-                const doneBanner = document.getElementById('submitDoneBanner');
-                if (doneBanner) doneBanner.classList.remove('hidden');
-
-                // Populate Modal Summary
-                document.getElementById('modalSummaryClient').innerText = `${isGujarati ? 'ક્લાયન્ટ' : 'Client'}: ${clientName} (${clientPhone})`;
-                document.getElementById('modalSummaryDates').innerText = `${isGujarati ? 'તારીખો' : 'Dates'}: ${dates.join(', ')}`;
-                document.getElementById('modalSummaryTotal').innerText = `${isGujarati ? 'અંદાજિત બજેટ' : 'Total Budget'}: ₹${total.toLocaleString('en-IN')}`;
-
-                // Show Success Modal
-                document.getElementById('successModal').classList.remove('hidden');
-                lucide.createIcons();
-
-                // Clear feedback alert
-                setTimeout(() => {
-                    alert(isGujarati 
-                        ? "✅ Submit Done!\n\nતમારી બુકિંગ ઇન્ક્વાયરી Maruti Photo & Films ને સફળતાપૂર્વક સબમિટ થઈ ગઈ છે." 
-                        : "✅ Submit Done!\n\nYour booking inquiry has been submitted successfully to Maruti Photo & Films.");
-                }, 300);
             });
         }
 

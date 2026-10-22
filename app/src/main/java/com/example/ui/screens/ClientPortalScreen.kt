@@ -26,7 +26,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -34,11 +35,9 @@ import androidx.compose.material.icons.filled.CurrencyRupee
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Notes
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -173,7 +172,7 @@ fun ClientPortalScreen(
             onClick = { viewModel.navigateTo(AppNavDestination.CALENDAR) },
             modifier = Modifier.size(32.dp)
           ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
           }
 
           Spacer(modifier = Modifier.width(6.dp))
@@ -796,7 +795,7 @@ fun ClientPortalScreen(
           value = requirementsNotes,
           onValueChange = { requirementsNotes = it },
           label = { Text(if (isHindi) "अतिरिक्त नोट या विशेष आवश्यकता" else "Additional Notes / Special Instructions") },
-          leadingIcon = { Icon(Icons.Default.Notes, contentDescription = null) },
+          leadingIcon = { Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = null) },
           modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
@@ -864,6 +863,21 @@ fun ClientPortalScreen(
               submittedDatesCount = dateServicesMap.size
               submittedTotalAmount = totalPackageAmount
               showSuccessDialog = true
+
+              val submittedInquiry = com.example.data.local.InquiryEntity(
+                id = System.currentTimeMillis(),
+                dateKey = dateServicesMap.keys.sorted().joinToString(", "),
+                clientName = clientName.trim(),
+                clientPhone = clientPhone.trim(),
+                eventType = eventTypeDesc,
+                location = venueLocation.trim(),
+                notes = fullNotes,
+                isConfirmed = false,
+                isRead = false,
+                createdAt = System.currentTimeMillis()
+              )
+              com.example.util.NotificationHelper.showInquiryNotification(context, submittedInquiry)
+
               // Clear inputs
               clientName = ""
               clientPhone = ""
@@ -879,7 +893,7 @@ fun ClientPortalScreen(
             .height(48.dp)
             .testTag("portal_submit_inquiry_button")
         ) {
-          Icon(Icons.Default.Send, contentDescription = null, tint = Color(0xFFFDE68A), modifier = Modifier.size(16.dp))
+          Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, tint = Color(0xFFFDE68A), modifier = Modifier.size(16.dp))
           Spacer(modifier = Modifier.width(8.dp))
           Text(
             text = if (isHindi) {
