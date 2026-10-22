@@ -67,7 +67,7 @@ class FirestoreSyncManager(
         } catch (e: Exception) {
           Log.w(TAG, "Polling cycle error: ${e.message}")
         }
-        delay(7000L) // Poll every 7 seconds while app is active
+        delay(3500L) // Poll every 3.5 seconds while app is active
       }
     }
 
