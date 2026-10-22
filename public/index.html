@@ -400,10 +400,14 @@
             lucide.createIcons();
         }
 
+        let isFormSubmitted = false;
+
         function updateSubmitButtonText() {
+            if (isFormSubmitted) return;
             const count = Object.keys(selectedDatesMap).length;
             const total = calculateTotalBudget();
             const btn = document.getElementById('submitButtonText');
+            if (!btn) return;
             if (count === 0) {
                 btn.innerText = isGujarati ? "તારીખ પસંદ કરો 🚀" : "Pick Dates 🚀";
             } else {
@@ -608,6 +612,26 @@
         function handleInquirySubmit(e) {
             if (e && e.preventDefault) e.preventDefault();
             if (e && e.stopPropagation) e.stopPropagation();
+
+            // 1. INSTANT 0ms visual feedback: Turn the submit button GREEN with "Submit Done" immediately!
+            isFormSubmitted = true;
+            const submitBtn = document.getElementById('submitButton');
+            if (submitBtn) {
+                submitBtn.style.setProperty('background-color', '#059669', 'important'); // emerald-600
+                submitBtn.style.setProperty('color', '#ffffff', 'important');
+                submitBtn.style.setProperty('border', '2px solid #34d399', 'important');
+                submitBtn.className = "w-full mt-2 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer";
+                submitBtn.innerHTML = '<span style="font-size:20px;">✅</span> <span style="font-weight:800; font-size:15px; letter-spacing:0.3px;">Submit Done! (સફળતાપૂર્વક સબમિટ થઈ ગયું)</span>';
+            }
+
+            // Also show top toast banner and confirmation card
+            const topToast = document.getElementById('topSubmitDoneToast');
+            if (topToast) topToast.style.display = 'block';
+            const doneBanner = document.getElementById('submitDoneBanner');
+            if (doneBanner) {
+                doneBanner.style.display = 'block';
+                doneBanner.classList.remove('hidden');
+            }
 
             let dates = Object.keys(selectedDatesMap).sort();
             if (dates.length === 0) {

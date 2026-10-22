@@ -1,5 +1,6 @@
 package com.example.data.remote
 
+import android.app.NotificationManager
 import android.content.Context
 import android.util.Log
 import com.example.data.local.InquiryEntity
@@ -146,6 +147,9 @@ class FirestoreSyncManager(
   private val knownDocIds = java.util.Collections.synchronizedSet(
     HashSet(prefs.getStringSet("known_doc_ids", emptySet()) ?: emptySet())
   )
+  private val declinedPhones = java.util.Collections.synchronizedSet(
+    HashSet(prefs.getStringSet("declined_phones", emptySet()) ?: emptySet())
+  )
   private var isFirstSyncCycle = !prefs.getBoolean("has_completed_initial_sync", false)
 
   private suspend fun parseAndSyncInquiries(jsonString: String) {
@@ -166,6 +170,14 @@ class FirestoreSyncManager(
         val clientName = fields.optJSONObject("clientName")?.optString("stringValue")?.trim() ?: ""
         val clientPhone = fields.optJSONObject("clientPhone")?.optString("stringValue")?.trim() ?: ""
         val status = fields.optJSONObject("status")?.optString("stringValue") ?: "PENDING"
+
+        // If this inquiry was Unaccepted (Declined), NEVER re-insert it and NEVER notify!
+        if (clientPhone.isBlank() || declinedPhones.contains(clientPhone) || status == "DECLINED") {
+          newlyKnownIds.add(docId)
+          knownDocIds.add(docId)
+          continue
+        }
+
         val location = fields.optJSONObject("location")?.optString("stringValue") ?: ""
         val notes = fields.optJSONObject("notes")?.optString("stringValue") ?: ""
         val rawDates = fields.optJSONObject("dates")?.optString("stringValue")?.trim() ?: ""
@@ -313,19 +325,109 @@ class FirestoreSyncManager(
 
   suspend fun markInquiryDeclined(clientPhone: String, dates: String) {
     withContext(Dispatchers.IO) {
+      val trimmedPhone = clientPhone.trim()
+      if (trimmedPhone.isBlank()) return@withContext
+
+      // 1. Add to permanent declined sets in SharedPreferences so it NEVER notifies again
+      declinedPhones.add(trimmedPhone)
+      prefs.edit().putStringSet("declined_phones", HashSet(declinedPhones)).apply()
+
+      // 2. Dismiss any active notification from the system status bar
       try {
-        val db = firestore ?: return@withContext
-        val query = db.collection("studios").document("marutiphoto").collection("inquiries")
-          .whereEqualTo("clientPhone", clientPhone)
-          .get()
-        query.addOnSuccessListener { snapshots ->
-          for (doc in snapshots.documents) {
-            doc.reference.update("status", "DECLINED")
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+        notificationManager?.cancelAll()
+      } catch (_: Exception) {}
+
+      // 3. Immediately DELETE the inquiry document from cloud Firestore via REST
+      try {
+        deleteInquiriesByPhoneFromCloudRest(trimmedPhone)
+      } catch (e: Exception) {
+        Log.w(TAG, "Failed to delete inquiry from cloud REST: ${e.message}")
+      }
+
+      // 4. Also delete via Firestore SDK if initialized
+      try {
+        firestore?.collection("studios")?.document("marutiphoto")?.collection("inquiries")
+          ?.whereEqualTo("clientPhone", trimmedPhone)
+          ?.get()
+          ?.addOnSuccessListener { snapshots ->
+            for (doc in snapshots.documents) {
+              doc.reference.delete()
+            }
+          }
+      } catch (_: Exception) {}
+    }
+  }
+
+  private fun deleteInquiriesByPhoneFromCloudRest(phone: String) {
+    var connection: HttpURLConnection? = null
+    try {
+      val url = URL(queryUrl)
+      connection = (url.openConnection() as HttpURLConnection).apply {
+        requestMethod = "POST"
+        setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+        setRequestProperty("Accept", "application/json")
+        connectTimeout = 8000
+        readTimeout = 8000
+        doOutput = true
+        doInput = true
+      }
+
+      val requestPayload = JSONObject().apply {
+        val structuredQuery = JSONObject().apply {
+          val fromArray = JSONArray().apply {
+            put(JSONObject().apply { put("collectionId", "inquiries") })
+          }
+          put("from", fromArray)
+        }
+        put("structuredQuery", structuredQuery)
+      }
+
+      OutputStreamWriter(connection.outputStream, "UTF-8").use { writer ->
+        writer.write(requestPayload.toString())
+        writer.flush()
+      }
+
+      if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+        val responseBody = BufferedReader(InputStreamReader(connection.inputStream, "UTF-8")).use { reader ->
+          reader.readText()
+        }
+        val jsonArray = JSONArray(responseBody)
+        for (i in 0 until jsonArray.length()) {
+          val item = jsonArray.optJSONObject(i) ?: continue
+          val doc = item.optJSONObject("document") ?: continue
+          val fields = doc.optJSONObject("fields") ?: continue
+          val docPhone = fields.optJSONObject("clientPhone")?.optString("stringValue")?.trim() ?: ""
+          if (docPhone == phone) {
+            val docName = doc.optString("name")
+            if (docName.isNotBlank()) {
+              deleteSingleDocRest(docName)
+            }
           }
         }
-      } catch (e: Exception) {
-        Log.w(TAG, "Failed to mark inquiry declined in cloud: ${e.message}")
       }
+    } catch (e: Exception) {
+      Log.w(TAG, "Error finding inquiries to delete: ${e.message}")
+    } finally {
+      connection?.disconnect()
+    }
+  }
+
+  private fun deleteSingleDocRest(docName: String) {
+    var delConn: HttpURLConnection? = null
+    try {
+      val delUrl = URL("https://firestore.googleapis.com/v1/$docName?key=$apiKey")
+      delConn = (delUrl.openConnection() as HttpURLConnection).apply {
+        requestMethod = "DELETE"
+        connectTimeout = 8000
+        readTimeout = 8000
+      }
+      val code = delConn.responseCode
+      Log.d(TAG, "Deleted declined inquiry from cloud REST ($docName), code: $code")
+    } catch (e: Exception) {
+      Log.w(TAG, "Error sending DELETE to cloud: ${e.message}")
+    } finally {
+      delConn?.disconnect()
     }
   }
 }
