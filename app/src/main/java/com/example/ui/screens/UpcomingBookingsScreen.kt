@@ -7,6 +7,8 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -95,6 +97,7 @@ fun UpcomingBookingsScreen(
   var searchQuery by remember { mutableStateOf("") }
   var bookingToDelete by remember { mutableStateOf<GroupedClientBooking?>(null) }
   var singleDateToDelete by remember { mutableStateOf<StudioDateEntity?>(null) }
+  var bookingDetailToView by remember { mutableStateOf<GroupedClientBooking?>(null) }
 
   // Group multiple dates for the same client into a single card
   val groupedBookings = remember(uiState.datesMap, searchQuery) {
@@ -317,6 +320,9 @@ fun UpcomingBookingsScreen(
             },
             onDeleteBookingClick = {
               bookingToDelete = group
+            },
+            onViewDetailsClick = {
+              bookingDetailToView = group
             }
           )
         }
@@ -439,6 +445,15 @@ fun UpcomingBookingsScreen(
       }
     )
   }
+
+  // 3. Full Booking Detail Dialog (વિગત જુઓ 👁️)
+  bookingDetailToView?.let { booking ->
+    BookingDetailDialog(
+      booking = booking,
+      isGujarati = isGujarati,
+      onDismiss = { bookingDetailToView = null }
+    )
+  }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -448,7 +463,8 @@ private fun GroupedBookedCard(
   isGujarati: Boolean,
   onDateChipClick: (String) -> Unit,
   onDeleteDateClick: (StudioDateEntity) -> Unit,
-  onDeleteBookingClick: () -> Unit
+  onDeleteBookingClick: () -> Unit,
+  onViewDetailsClick: () -> Unit
 ) {
   val context = LocalContext.current
   val balance = group.totalPackageAmount - group.totalAdvance
@@ -673,6 +689,309 @@ private fun GroupedBookedCard(
           }
         }
       }
+
+      Spacer(modifier = Modifier.height(10.dp))
+
+      // 4. View Details Button (સંપૂર્ણ વિગત જુઓ 👁️)
+      Button(
+        onClick = onViewDetailsClick,
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier
+          .fillMaxWidth()
+          .height(36.dp)
+          .testTag("view_details_btn_${group.groupKey}")
+      ) {
+        Icon(
+          imageVector = Icons.Default.EventNote,
+          contentDescription = null,
+          tint = Color(0xFFFBBF24),
+          modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+          text = if (isGujarati) "સંપૂર્ણ વિગત જુઓ 👁️" else "View Booking Details 👁️",
+          color = Color.White,
+          fontWeight = FontWeight.Bold,
+          fontSize = 12.sp
+        )
+      }
     }
   }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun BookingDetailDialog(
+  booking: GroupedClientBooking,
+  isGujarati: Boolean,
+  onDismiss: () -> Unit
+) {
+  val context = LocalContext.current
+  val balance = (booking.totalPackageAmount - booking.totalAdvance).coerceAtLeast(0.0)
+
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    modifier = Modifier.testTag("booking_detail_dialog"),
+    icon = {
+      Box(
+        modifier = Modifier
+          .size(46.dp)
+          .clip(CircleShape)
+          .background(Color(0xFFDC2626)),
+        contentAlignment = Alignment.Center
+      ) {
+        Icon(
+          imageVector = Icons.Default.EventNote,
+          contentDescription = null,
+          tint = Color.White,
+          modifier = Modifier.size(24.dp)
+        )
+      }
+    },
+    title = {
+      Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Text(
+          text = booking.clientName.ifBlank { if (isGujarati) "ક્લાયન્ટ બુકિંગ" else "Client Booking" },
+          fontSize = 18.sp,
+          fontWeight = FontWeight.Bold,
+          color = MaterialTheme.colorScheme.onSurface
+        )
+        if (booking.clientPhone.isNotBlank()) {
+          Text(
+            text = "📞 ${booking.clientPhone}",
+            fontSize = 13.sp,
+            color = Color.Gray,
+            fontWeight = FontWeight.Medium
+          )
+        }
+      }
+    },
+    text = {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+      ) {
+        // 1. Financial Package Card
+        Surface(
+          shape = RoundedCornerShape(12.dp),
+          color = Color(0xFFF8FAFC),
+          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE2E8F0)),
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              Text(
+                text = if (isGujarati) "💰 કુલ પેકેજ રકમ:" else "💰 Total Package:",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF0F172A)
+              )
+              Text(
+                text = "₹${booking.totalPackageAmount.toInt()}",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color(0xFF047857)
+              )
+            }
+            androidx.compose.material3.HorizontalDivider(thickness = 0.5.dp, color = Color(0xFFE2E8F0))
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+              Text(
+                text = if (isGujarati) "🟢 એડવાન્સ મળેલ:" else "🟢 Advance Paid:",
+                fontSize = 12.sp,
+                color = Color(0xFF475569)
+              )
+              Text(
+                text = "₹${booking.totalAdvance.toInt()}",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF15803D)
+              )
+            }
+            Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+              Text(
+                text = if (isGujarati) "⏳ બાકી રકમ (Balance):" else "⏳ Remaining Balance:",
+                fontSize = 12.sp,
+                color = Color(0xFF475569)
+              )
+              Text(
+                text = "₹${balance.toInt()}",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (balance > 0) Color(0xFFB91C1C) else Color(0xFF047857)
+              )
+            }
+          }
+        }
+
+        // 2. Day-wise Services List
+        Surface(
+          shape = RoundedCornerShape(12.dp),
+          color = Color(0xFFFEF2F2),
+          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFECACA)),
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+              text = if (isGujarati) "📅 કઈ તારીખે શું કામ કરવાનું છે:" else "📅 Day-wise Shoot Services:",
+              fontSize = 13.sp,
+              fontWeight = FontWeight.Bold,
+              color = Color(0xFF991B1B)
+            )
+
+            booking.dates.forEach { dateEntity ->
+              val formattedDate = StringsHelper.formatDateChip(dateEntity.dateKey)
+              // Extract service line for this date from customNote if available
+              val noteLines = booking.customNote.lines()
+              val matchingNoteLine = noteLines.find { it.contains(dateEntity.dateKey) }
+              val serviceTitle = if (!matchingNoteLine.isNullOrBlank()) {
+                matchingNoteLine.replace("•", "").trim()
+              } else if (dateEntity.eventType.isNotBlank()) {
+                dateEntity.eventType
+              } else {
+                booking.eventType.ifBlank { "📸 Shoot" }
+              }
+
+              Row(
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .clip(RoundedCornerShape(8.dp))
+                  .background(Color.White)
+                  .padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                Surface(
+                  shape = RoundedCornerShape(6.dp),
+                  color = Color(0xFFDC2626)
+                ) {
+                  Text(
+                    text = formattedDate,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                  )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                  text = serviceTitle,
+                  fontSize = 12.sp,
+                  fontWeight = FontWeight.SemiBold,
+                  color = Color(0xFF1E293B),
+                  modifier = Modifier.weight(1f)
+                )
+              }
+            }
+          }
+        }
+
+        // 3. Location / Venue
+        if (booking.location.isNotBlank()) {
+          Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = Color(0xFFF1F5F9),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+              Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
+              Spacer(modifier = Modifier.width(6.dp))
+              Text(
+                text = "${if (isGujarati) "સ્થળ / વેન્યુ: " else "Location: "}${booking.location}",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF334155)
+              )
+            }
+          }
+        }
+
+        // 4. Notes (excluding availability tag)
+        val cleanNotes = booking.customNote.lines()
+          .filter { !it.contains("તારીખ") && !it.contains("બુક થયેલ છે") && !it.contains("ખાલી છે") && !it.startsWith("•") }
+          .joinToString("\n").trim()
+        if (cleanNotes.isNotBlank()) {
+          Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = Color(0xFFFFFBEB),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFDE68A)),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Column(modifier = Modifier.padding(10.dp)) {
+              Text(
+                text = if (isGujarati) "📝 ક્લાયન્ટ વિશેષ નોંધ:" else "📝 Special Notes:",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF92400E)
+              )
+              Spacer(modifier = Modifier.height(2.dp))
+              Text(
+                text = cleanNotes,
+                fontSize = 12.sp,
+                color = Color(0xFF78350F)
+              )
+            }
+          }
+        }
+      }
+    },
+    confirmButton = {
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        if (booking.clientPhone.isNotBlank()) {
+          Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Button(
+              onClick = {
+                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${booking.clientPhone}"))
+                try { context.startActivity(intent) } catch (_: Exception) {}
+              },
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+              shape = RoundedCornerShape(8.dp),
+              modifier = Modifier.height(34.dp)
+            ) {
+              Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(14.dp))
+              Spacer(modifier = Modifier.width(3.dp))
+              Text(if (isGujarati) "કૉલ" else "Call", fontSize = 11.sp)
+            }
+
+            Button(
+              onClick = {
+                val clean = booking.clientPhone.replace("[^0-9]".toRegex(), "")
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://api.whatsapp.com/send?phone=$clean"))
+                try { context.startActivity(intent) } catch (_: Exception) {}
+              },
+              colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
+              shape = RoundedCornerShape(8.dp),
+              modifier = Modifier.height(34.dp)
+            ) {
+              Text("WhatsApp", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
+          }
+        }
+
+        Button(
+          onClick = onDismiss,
+          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF475569)),
+          shape = RoundedCornerShape(8.dp),
+          modifier = Modifier.height(34.dp)
+        ) {
+          Text(if (isGujarati) "બંધ કરો" else "Close", fontSize = 11.sp)
+        }
+      }
+    }
+  )
 }

@@ -137,7 +137,12 @@ class StudioRepository(private val dao: StudioDao) {
     inquiryId: Long,
     dateKey: String,
     advanceAmount: Double = 0.0,
-    totalAmount: Double = 0.0
+    totalAmount: Double = 0.0,
+    clientName: String = "",
+    clientPhone: String = "",
+    eventType: String = "",
+    location: String = "",
+    notes: String = ""
   ) {
     dao.markInquiryConfirmed(inquiryId)
     val keys = if (dateKey.contains(",")) {
@@ -151,10 +156,24 @@ class StudioRepository(private val dao: StudioDao) {
 
     keys.forEach { key ->
       val existing = dao.getDate(key)
+      // Extract service for this specific date if present in notes (e.g. "• 2026-10-18: 📸 Candid Photography")
+      val matchingService = notes.lines().find { it.contains(key) }?.substringAfter(":")?.trim()
+      val specificEventType = if (!matchingService.isNullOrBlank()) matchingService else eventType.ifBlank { existing?.eventType ?: "Shoot" }
+
+      val effectiveClientName = clientName.ifBlank { existing?.clientName ?: "" }
+      val effectivePhone = clientPhone.ifBlank { existing?.clientPhone ?: "" }
+      val effectiveLoc = location.ifBlank { existing?.location ?: "" }
+      val effectiveNotes = if (notes.isNotBlank()) notes else (existing?.customNote ?: "")
+
       if (existing != null) {
         dao.upsertDate(
           existing.copy(
             status = DateStatus.BOOKED.name,
+            clientName = effectiveClientName,
+            clientPhone = effectivePhone,
+            eventType = specificEventType,
+            location = effectiveLoc,
+            customNote = effectiveNotes,
             advanceAmount = if (advPerDate > 0) advPerDate else existing.advanceAmount,
             totalPackageAmount = if (totPerDate > 0) totPerDate else existing.totalPackageAmount,
             updatedAt = System.currentTimeMillis()
@@ -165,6 +184,11 @@ class StudioRepository(private val dao: StudioDao) {
           StudioDateEntity(
             dateKey = key,
             status = DateStatus.BOOKED.name,
+            clientName = effectiveClientName,
+            clientPhone = effectivePhone,
+            eventType = specificEventType,
+            location = effectiveLoc,
+            customNote = effectiveNotes,
             advanceAmount = advPerDate,
             totalPackageAmount = totPerDate,
             updatedAt = System.currentTimeMillis()

@@ -445,7 +445,12 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
         inquiryId = inquiry.id,
         dateKey = inquiry.dateKey,
         advanceAmount = advanceAmount,
-        totalAmount = totalAmount
+        totalAmount = totalAmount,
+        clientName = inquiry.clientName,
+        clientPhone = inquiry.clientPhone,
+        eventType = inquiry.eventType,
+        location = inquiry.location,
+        notes = inquiry.notes
       )
       syncManager?.markInquiryConfirmed(inquiry.clientPhone, inquiry.dateKey)
       _inquiryToConfirm.value = null

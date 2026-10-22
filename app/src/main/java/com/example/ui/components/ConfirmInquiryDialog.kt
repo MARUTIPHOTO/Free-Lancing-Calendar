@@ -52,9 +52,16 @@ fun ConfirmInquiryDialog(
   onConfirmDone: (advanceAmount: Double, totalAmount: Double) -> Unit
 ) {
   val prefilledTotal = remember(inquiry) {
-    val regex = "₹([0-9]+)".toRegex()
+    val regex = "₹\\s*([0-9,]+)".toRegex()
     val match = regex.find(inquiry.notes) ?: regex.find(inquiry.eventType)
-    match?.groupValues?.get(1) ?: ""
+    val parsed = match?.groupValues?.get(1)?.replace(",", "")?.trim() ?: ""
+    if (parsed.isNotBlank()) {
+      parsed
+    } else {
+      val numRegex = "(?:બજેટ|budget|total|pkg)[:\\s]*₹?\\s*([0-9,]+)".toRegex(RegexOption.IGNORE_CASE)
+      val numMatch = numRegex.find(inquiry.notes) ?: numRegex.find(inquiry.eventType)
+      numMatch?.groupValues?.get(1)?.replace(",", "")?.trim() ?: ""
+    }
   }
   var advanceInput by remember { mutableStateOf("") }
   var totalInput by remember { mutableStateOf(prefilledTotal) }
