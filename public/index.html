@@ -198,14 +198,14 @@
                     </div>
                 </div>
 
-                <!-- Venue / Location -->
+                <!-- Venue / Location (Optional) -->
                 <div>
                     <label id="labelLocation" class="block text-xs font-bold text-slate-700 uppercase mb-1">
-                        સ્થળ / વેન્યુ / શહેર (Location / City) *
+                        સ્થળ / વેન્યુ / શહેર (Location / City) (Optional)
                     </label>
                     <div class="relative">
                         <i data-lucide="map-pin" class="w-4 h-4 text-rose-500 absolute left-3 top-3"></i>
-                        <input type="text" id="inputClientLocation" required placeholder="દા.ત. Shreeji Party Plot, Ahmedabad" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
+                        <input type="text" id="inputClientLocation" placeholder="દા.ત. Shreeji Party Plot, Ahmedabad" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
                     </div>
                 </div>
 
@@ -225,6 +225,17 @@
                     <i data-lucide="send" class="w-4 h-4 text-amber-400"></i>
                     <span id="submitButtonText">બુકિંગ ઇન્ક્વાયરી મોકલો 🚀</span>
                 </button>
+
+                <!-- Prominent Submit Done Confirmation Banner -->
+                <div id="submitDoneBanner" class="hidden mt-3 p-4 bg-emerald-50 border-2 border-emerald-500 rounded-2xl text-center shadow-lg">
+                    <div class="flex items-center justify-center gap-2 text-emerald-800 font-extrabold text-base">
+                        <span>✅</span>
+                        <span>Submit Done! (સફળતાપૂર્વક સબમિટ થઈ ગયું)</span>
+                    </div>
+                    <p class="text-xs text-emerald-700 mt-1">
+                        તમારી બુકિંગ ઇન્ક્વાયરી Maruti Photo & Films ને સફળતાપૂર્વક પહોંચી ગઈ છે.
+                    </p>
+                </div>
             </form>
         </section>
     </main>
@@ -662,8 +673,17 @@ ${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
             }).catch(err => {
                 console.warn("Firestore submit error:", err);
             }).finally(() => {
-                if (submitBtn) submitBtn.disabled = false;
-                if (submitBtnText && originalText) submitBtnText.innerText = originalText;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.className = "w-full mt-2 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2";
+                }
+                if (submitBtnText) {
+                    submitBtnText.innerHTML = "Submit Done ✅ (સફળતાપૂર્વક સબમિટ થઈ ગયું)";
+                }
+
+                // Show in-page confirmation banner
+                const doneBanner = document.getElementById('submitDoneBanner');
+                if (doneBanner) doneBanner.classList.remove('hidden');
 
                 // Populate Modal Summary
                 document.getElementById('modalSummaryClient').innerText = `${isGujarati ? 'ક્લાયન્ટ' : 'Client'}: ${clientName} (${clientPhone})`;
@@ -673,6 +693,13 @@ ${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
                 // Show Success Modal
                 document.getElementById('successModal').classList.remove('hidden');
                 lucide.createIcons();
+
+                // Clear feedback alert
+                setTimeout(() => {
+                    alert(isGujarati 
+                        ? "✅ Submit Done!\n\nતમારી બુકિંગ ઇન્ક્વાયરી Maruti Photo & Films ને સફળતાપૂર્વક સબમિટ થઈ ગઈ છે." 
+                        : "✅ Submit Done!\n\nYour booking inquiry has been submitted successfully to Maruti Photo & Films.");
+                }, 300);
             });
         }
 

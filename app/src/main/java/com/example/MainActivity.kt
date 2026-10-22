@@ -102,6 +102,23 @@ class MainActivity : ComponentActivity() {
       MyApplicationTheme {
         val viewModel: StudioViewModel = viewModel(factory = factory)
 
+        // Request Notification Permission on Android 13+ (API 33+)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+          val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+            contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+          ) { /* permission result */ }
+          androidx.compose.runtime.LaunchedEffect(Unit) {
+            permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+          }
+        }
+
+        // Navigate to inquiries if opened from system notification
+        androidx.compose.runtime.LaunchedEffect(intent) {
+          if (intent?.getStringExtra("NAV_DESTINATION") == "NOTIFICATIONS") {
+            viewModel.navigateTo(AppNavDestination.NOTIFICATIONS)
+          }
+        }
+
         // Real-time Firestore sync for incoming online web inquiries
         androidx.compose.runtime.LaunchedEffect(Unit) {
           val syncManager = com.example.data.remote.FirestoreSyncManager(

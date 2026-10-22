@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -82,6 +83,7 @@ fun InquiryInboxScreen(
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
+  val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
   val isHindi = uiState.profile.selectedLanguage == "HI" || uiState.profile.selectedLanguage == "GU"
 
   var selectedTab by remember { mutableIntStateOf(0) }
@@ -138,6 +140,21 @@ fun InquiryInboxScreen(
           fontSize = 11.sp,
           color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+      }
+
+      // Refresh Button
+      IconButton(
+        onClick = {
+          Toast.makeText(context, if (isHindi) "नई पूछताछ जाँची जा रही है... 🔄" else "Checking for new inquiries... 🔄", Toast.LENGTH_SHORT).show()
+          viewModel.syncManager?.let { sm ->
+            coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+              sm.manualRefresh()
+            }
+          }
+        },
+        modifier = Modifier.size(36.dp)
+      ) {
+        Icon(Icons.Default.Refresh, contentDescription = "Refresh Inquiries")
       }
 
       // Quick Language Toggle Button

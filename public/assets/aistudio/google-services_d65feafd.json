@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "145214324991",
+    "project_id": "free-lancing-calendar",
+    "storage_bucket": "free-lancing-calendar.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:145214324991:android:3798ba756ef7536d480cca",
+        "android_client_info": {
+          "package_name": "com.FreeLancingCalendar.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZ7J5z4rh82JfsQ1_UHtrRc2vhHzCCmAE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
