@@ -165,20 +165,50 @@ class FirestoreSyncManager(
         val createdAt = createdAtRaw?.toLongOrNull() ?: System.currentTimeMillis()
 
         if (clientPhone.isNotBlank()) {
-          // Check if already in local SQLite database
+          // Check if already in local SQLite database by unique submission timestamp
+          // This allows repeated inquiries with the same phone number for different or same dates without blocking!
           val alreadySaved = existingInquiries.any {
-            it.clientPhone.trim() == clientPhone && (it.dateKey.trim() == effectiveDates || it.dateKey.trim() == rawDates)
+            it.createdAt == createdAt && it.clientPhone.trim() == clientPhone
           }
 
           if (!alreadySaved) {
             val isConfirmedState = (status == "CONFIRMED")
+
+            // Check whether requested dates are already BOOKED in the photographer's calendar
+            val parsedDates = effectiveDates.split(",")
+              .map { it.trim().substringBefore(" ") }
+              .filter { it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) }
+
+            var isAnyDateBooked = false
+            for (d in parsedDates) {
+              val dateEntity = dao.getDate(d)
+              if (dateEntity != null && dateEntity.status == "BOOKED") {
+                isAnyDateBooked = true
+                break
+              }
+            }
+
+            val availabilityTag = if (isAnyDateBooked) {
+              "⚠️ તારીખ પહેલેથી બુક થયેલ છે (Date Already Booked)"
+            } else {
+              "🟢 તારીખ ખાલી છે (Date Free / Available)"
+            }
+
+            val finalNotes = buildString {
+              append(availabilityTag)
+              if (notes.isNotBlank()) {
+                append("\n")
+                append(notes)
+              }
+            }
+
             val newInquiry = InquiryEntity(
               dateKey = effectiveDates,
               clientName = clientName.ifBlank { "Client (${clientPhone})" },
               clientPhone = clientPhone,
               eventType = eventType,
               location = location,
-              notes = if (notes.isNotBlank()) notes else "Online Web Inquiry",
+              notes = finalNotes,
               isConfirmed = isConfirmedState,
               isRead = false,
               createdAt = createdAt
@@ -187,10 +217,30 @@ class FirestoreSyncManager(
             val insertedId = dao.insertInquiry(newInquiry)
             val savedInquiry = newInquiry.copy(id = insertedId)
 
-            Log.d(TAG, "Successfully synced inquiry into app: $savedInquiry")
+            // If date is unbooked, reflect as INQUIRY (Yellow) on photographer's calendar
+            if (!isAnyDateBooked && parsedDates.isNotEmpty()) {
+              for (d in parsedDates) {
+                val existing = dao.getDate(d)
+                if (existing == null || existing.status != "BOOKED") {
+                  dao.upsertDate(
+                    (existing ?: com.example.data.local.StudioDateEntity(dateKey = d)).copy(
+                      status = "INQUIRY",
+                      clientName = clientName.ifBlank { "Client ($clientPhone)" },
+                      clientPhone = clientPhone,
+                      eventType = eventType,
+                      location = location,
+                      customNote = if (notes.isNotBlank()) notes else "Online Web Inquiry",
+                      updatedAt = System.currentTimeMillis()
+                    )
+                  )
+                }
+              }
+            }
 
-            // 1. Show Real Android Status Bar System Notification with Sound & Vibration
-            NotificationHelper.showInquiryNotification(context, savedInquiry)
+            Log.d(TAG, "Successfully synced inquiry into app: $savedInquiry (BookedConflict: $isAnyDateBooked)")
+
+            // 1. Show Real Android Status Bar System Notification with device message tone
+            NotificationHelper.showInquiryNotification(context, savedInquiry, isBookedConflict = isAnyDateBooked)
 
             // 2. Trigger in-app Compose notification banner
             withContext(Dispatchers.Main) {

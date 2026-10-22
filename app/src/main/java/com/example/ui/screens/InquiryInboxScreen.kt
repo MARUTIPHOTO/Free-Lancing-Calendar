@@ -478,6 +478,23 @@ private fun InquiryCard(
           )
         }
 
+        // Date Availability Status Badge (Booked Conflict vs Free)
+        val isClash = inquiry.notes.contains("Date Already Booked") || inquiry.notes.contains("તારીખ પહેલેથી બુક")
+        Spacer(modifier = Modifier.width(4.dp))
+        Box(
+          modifier = Modifier
+            .clip(CircleShape)
+            .background(if (isClash) Color(0xFFFEE2E2) else Color(0xFFDCFCE7))
+            .padding(horizontal = 6.dp, vertical = 3.dp)
+        ) {
+          Text(
+            text = if (isClash) "⚠️ બુક થયેલ છે" else "🟢 તારીખ ખાલી છે",
+            fontSize = 9.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (isClash) Color(0xFF991B1B) else Color(0xFF166534)
+          )
+        }
+
         Spacer(modifier = Modifier.width(6.dp))
 
         // 🗑️ Delete Button on Inquiry Card
