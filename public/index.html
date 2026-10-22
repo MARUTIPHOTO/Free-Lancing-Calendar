@@ -30,6 +30,12 @@
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen pb-12">
 
+    <!-- 0. STICKY TOP CONFIRMATION TOAST (Guaranteed 100% Visible On Any Screen) -->
+    <div id="topSubmitDoneToast" style="display:none; position:fixed; top:12px; left:12px; right:12px; z-index:999999; background:#059669; color:#ffffff; padding:16px; border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,0.4); text-align:center; font-weight:bold; border: 2px solid #ffffff;">
+        <div style="font-size:22px; font-weight:800; margin-bottom:4px;">🎉 Submit Done ✅</div>
+        <div style="font-size:14px; font-weight:600; opacity:0.95;">તમારી બુકિંગ ઇન્ક્વાયરી સફળતાપૂર્વક સબમિટ થઈ ગઈ છે!</div>
+    </div>
+
     <!-- 1. Studio Branding Header Card (Matching Android ClientPortalScreen) -->
     <header class="bg-slate-900 text-white shadow-md border-b border-slate-800">
         <div class="max-w-3xl mx-auto px-4 py-4 sm:px-6">
@@ -689,22 +695,30 @@ ${breakdownLines}
 ${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
 કૃપા કરીને આ તારીખ કન્ફર્મ કરવા જણાવશો. આભાર!`;
 
-            // 3. Update UI button and feedback to "Submit Done ✅" immediately
+            // 3. Update UI button and feedback to "Submit Done ✅" immediately with guaranteed visible styles
             const submitBtn = document.getElementById('submitButton');
             const submitBtnText = document.getElementById('submitButtonText');
             if (submitBtn) {
                 submitBtn.disabled = false;
+                submitBtn.style.backgroundColor = '#059669';
+                submitBtn.style.color = '#ffffff';
                 submitBtn.className = "w-full mt-2 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer";
             }
             if (submitBtnText) {
-                submitBtnText.innerHTML = "Submit Done ✅ (સફળતાપૂર્વક સબમિટ થઈ ગયું)";
+                submitBtnText.innerHTML = "✅ Submit Done! (સફળતાપૂર્વક સબમિટ થઈ ગયું)";
             }
 
-            // Show in-page prominent confirmation banner
+            // Show top sticky banner immediately
+            const topToast = document.getElementById('topSubmitDoneToast');
+            if (topToast) {
+                topToast.style.display = 'block';
+            }
+
+            // Show in-page prominent confirmation banner with direct styles
             const doneBanner = document.getElementById('submitDoneBanner');
             if (doneBanner) {
+                doneBanner.style.display = 'block';
                 doneBanner.classList.remove('hidden');
-                doneBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
 
             // Populate Modal Summary
@@ -722,6 +736,13 @@ ${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
                 succModal.classList.remove('hidden');
             }
             try { lucide.createIcons(); } catch(e){}
+
+            // Native popup alert so user gets instant 100% confirmation on any mobile browser!
+            try {
+                setTimeout(function() {
+                    alert("✅ Submit Done!\n\nતમારી ઇન્ક્વાયરી સફળતાપૂર્વક સબમિટ થઈ ગઈ છે.\nMaruti Photo & Films ને મોકલાઈ ગઈ છે.");
+                }, 80);
+            } catch(e) {}
         }
 
         function closeSuccessModal() {

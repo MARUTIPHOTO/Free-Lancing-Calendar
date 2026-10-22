@@ -142,16 +142,27 @@ class FirestoreSyncManager(
     }
   }
 
+  private val prefs = context.getSharedPreferences("firestore_sync_prefs", Context.MODE_PRIVATE)
+  private val knownDocIds = java.util.Collections.synchronizedSet(
+    HashSet(prefs.getStringSet("known_doc_ids", emptySet()) ?: emptySet())
+  )
+  private var isFirstSyncCycle = !prefs.getBoolean("has_completed_initial_sync", false)
+
   private suspend fun parseAndSyncInquiries(jsonString: String) {
     try {
       val jsonArray = JSONArray(jsonString)
       val existingInquiries = dao.getAllInquiriesFlow().first()
+      val newlyKnownIds = mutableSetOf<String>()
+      var isFirstRun = isFirstSyncCycle
 
       for (i in 0 until jsonArray.length()) {
         val item = jsonArray.optJSONObject(i) ?: continue
         val doc = item.optJSONObject("document") ?: continue
-        val fields = doc.optJSONObject("fields") ?: continue
+        val docName = doc.optString("name")
+        val docId = docName.substringAfterLast("/")
+        if (docId.isBlank()) continue
 
+        val fields = doc.optJSONObject("fields") ?: continue
         val clientName = fields.optJSONObject("clientName")?.optString("stringValue")?.trim() ?: ""
         val clientPhone = fields.optJSONObject("clientPhone")?.optString("stringValue")?.trim() ?: ""
         val status = fields.optJSONObject("status")?.optString("stringValue") ?: "PENDING"
@@ -162,92 +173,113 @@ class FirestoreSyncManager(
         val eventType = fields.optJSONObject("eventType")?.optString("stringValue") ?: "Online Inquiry"
 
         val createdAtRaw = fields.optJSONObject("createdAt")?.optString("integerValue")
-        val createdAt = createdAtRaw?.toLongOrNull() ?: System.currentTimeMillis()
+          ?: fields.optJSONObject("timestamp")?.optString("integerValue")
+        val createdAt = createdAtRaw?.toLongOrNull() ?: doc.optString("createTime").let { iso ->
+          try {
+            java.time.Instant.parse(iso).toEpochMilli()
+          } catch (_: Exception) {
+            val h = docId.hashCode().toLong()
+            if (h < 0) -h else h
+          }
+        }
 
-        if (clientPhone.isNotBlank()) {
-          // Check if already in local SQLite database by unique submission timestamp
-          // This allows repeated inquiries with the same phone number for different or same dates without blocking!
-          val alreadySaved = existingInquiries.any {
-            it.createdAt == createdAt && it.clientPhone.trim() == clientPhone
+        // Check if this document has already been processed and notified
+        val isAlreadyKnown = knownDocIds.contains(docId)
+
+        // Check if already in local SQLite database
+        val existingInDb = existingInquiries.find {
+          (it.clientPhone.trim() == clientPhone.trim() && it.createdAt == createdAt) ||
+          (it.clientPhone.trim() == clientPhone.trim() && it.dateKey == effectiveDates && it.clientName == clientName)
+        }
+
+        if (existingInDb == null && clientPhone.isNotBlank()) {
+          val isConfirmedState = (status == "CONFIRMED")
+
+          // Check whether requested dates are already BOOKED in the photographer's calendar
+          val parsedDates = effectiveDates.split(",")
+            .map { it.trim().substringBefore(" ") }
+            .filter { it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) }
+
+          var isAnyDateBooked = false
+          for (d in parsedDates) {
+            val dateEntity = dao.getDate(d)
+            if (dateEntity != null && dateEntity.status == "BOOKED") {
+              isAnyDateBooked = true
+              break
+            }
           }
 
-          if (!alreadySaved) {
-            val isConfirmedState = (status == "CONFIRMED")
+          val availabilityTag = if (isAnyDateBooked) {
+            "⚠️ તારીખ પહેલેથી બુક થયેલ છે (Date Already Booked)"
+          } else {
+            "🟢 તારીખ ખાલી છે (Date Free / Available)"
+          }
 
-            // Check whether requested dates are already BOOKED in the photographer's calendar
-            val parsedDates = effectiveDates.split(",")
-              .map { it.trim().substringBefore(" ") }
-              .filter { it.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) }
+          val finalNotes = buildString {
+            append(availabilityTag)
+            if (notes.isNotBlank()) {
+              append("\n")
+              append(notes)
+            }
+          }
 
-            var isAnyDateBooked = false
+          val newInquiry = InquiryEntity(
+            dateKey = effectiveDates,
+            clientName = clientName.ifBlank { "Client (${clientPhone})" },
+            clientPhone = clientPhone,
+            eventType = eventType,
+            location = location,
+            notes = finalNotes,
+            isConfirmed = isConfirmedState,
+            isRead = false,
+            createdAt = createdAt
+          )
+
+          val insertedId = dao.insertInquiry(newInquiry)
+          val savedInquiry = newInquiry.copy(id = insertedId)
+
+          // If date is unbooked, reflect as INQUIRY (Yellow) on photographer's calendar
+          if (!isAnyDateBooked && parsedDates.isNotEmpty() && status == "PENDING") {
             for (d in parsedDates) {
-              val dateEntity = dao.getDate(d)
-              if (dateEntity != null && dateEntity.status == "BOOKED") {
-                isAnyDateBooked = true
-                break
-              }
-            }
-
-            val availabilityTag = if (isAnyDateBooked) {
-              "⚠️ તારીખ પહેલેથી બુક થયેલ છે (Date Already Booked)"
-            } else {
-              "🟢 તારીખ ખાલી છે (Date Free / Available)"
-            }
-
-            val finalNotes = buildString {
-              append(availabilityTag)
-              if (notes.isNotBlank()) {
-                append("\n")
-                append(notes)
-              }
-            }
-
-            val newInquiry = InquiryEntity(
-              dateKey = effectiveDates,
-              clientName = clientName.ifBlank { "Client (${clientPhone})" },
-              clientPhone = clientPhone,
-              eventType = eventType,
-              location = location,
-              notes = finalNotes,
-              isConfirmed = isConfirmedState,
-              isRead = false,
-              createdAt = createdAt
-            )
-
-            val insertedId = dao.insertInquiry(newInquiry)
-            val savedInquiry = newInquiry.copy(id = insertedId)
-
-            // If date is unbooked, reflect as INQUIRY (Yellow) on photographer's calendar
-            if (!isAnyDateBooked && parsedDates.isNotEmpty()) {
-              for (d in parsedDates) {
-                val existing = dao.getDate(d)
-                if (existing == null || existing.status != "BOOKED") {
-                  dao.upsertDate(
-                    (existing ?: com.example.data.local.StudioDateEntity(dateKey = d)).copy(
-                      status = "INQUIRY",
-                      clientName = clientName.ifBlank { "Client ($clientPhone)" },
-                      clientPhone = clientPhone,
-                      eventType = eventType,
-                      location = location,
-                      customNote = if (notes.isNotBlank()) notes else "Online Web Inquiry",
-                      updatedAt = System.currentTimeMillis()
-                    )
+              val existing = dao.getDate(d)
+              if (existing == null || existing.status != "BOOKED") {
+                dao.upsertDate(
+                  (existing ?: com.example.data.local.StudioDateEntity(dateKey = d)).copy(
+                    status = "INQUIRY",
+                    clientName = clientName.ifBlank { "Client ($clientPhone)" },
+                    clientPhone = clientPhone,
+                    eventType = eventType,
+                    location = location,
+                    customNote = if (notes.isNotBlank()) notes else "Online Web Inquiry",
+                    updatedAt = System.currentTimeMillis()
                   )
-                }
+                )
               }
             }
+          }
 
-            Log.d(TAG, "Successfully synced inquiry into app: $savedInquiry (BookedConflict: $isAnyDateBooked)")
-
-            // 1. Show Real Android Status Bar System Notification with device message tone
+          // Trigger notification ONLY if this is a genuinely NEW inquiry and NOT the initial load of old inquiries
+          if (!isFirstRun && !isAlreadyKnown && status == "PENDING") {
+            Log.d(TAG, "New incoming inquiry detected! Showing notification for: $clientName ($clientPhone)")
             NotificationHelper.showInquiryNotification(context, savedInquiry, isBookedConflict = isAnyDateBooked)
-
-            // 2. Trigger in-app Compose notification banner
             withContext(Dispatchers.Main) {
               onNewInquiryNotification(savedInquiry)
             }
           }
         }
+
+        newlyKnownIds.add(docId)
+        knownDocIds.add(docId)
+      }
+
+      // Mark initial sync complete so future new inquiries will ring
+      if (isFirstSyncCycle) {
+        isFirstSyncCycle = false
+        prefs.edit().putBoolean("has_completed_initial_sync", true).apply()
+      }
+
+      if (newlyKnownIds.isNotEmpty()) {
+        prefs.edit().putStringSet("known_doc_ids", HashSet(knownDocIds)).apply()
       }
     } catch (e: Exception) {
       Log.e(TAG, "Failed to parse inquiries JSON: ${e.message}", e)

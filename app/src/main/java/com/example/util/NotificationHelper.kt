@@ -123,12 +123,7 @@ object NotificationHelper {
         NotificationManagerCompat.from(context).notify(notifId, notification)
       }
 
-      // Explicitly trigger device's message tone so it always rings audibly
-      try {
-        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        val ringtone = RingtoneManager.getRingtone(context, soundUri)
-        ringtone?.play()
-      } catch (_: Exception) {}
+      // Note: Device message tone is played natively and safely by NotificationChannel via NotificationManagerService
 
       // Trigger dual vibration pulse
       try {
