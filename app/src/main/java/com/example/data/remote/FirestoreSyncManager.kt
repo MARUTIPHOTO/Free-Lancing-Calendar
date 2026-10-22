@@ -25,9 +25,24 @@ class FirestoreSyncManager(
 
   init {
     try {
-      val app = FirebaseApp.initializeApp(context) ?: FirebaseApp.getInstance()
-      firestore = FirebaseFirestore.getInstance(app, databaseId)
-      Log.d(TAG, "FirebaseFirestore initialized for database: $databaseId")
+      val app = try {
+        FirebaseApp.getInstance()
+      } catch (e: Exception) {
+        FirebaseApp.initializeApp(context) ?: FirebaseApp.getInstance()
+      }
+      val resDbId = try {
+        val idRes = context.resources.getIdentifier("firestore_database_id", "string", context.packageName)
+        if (idRes != 0) context.getString(idRes) else databaseId
+      } catch (e: Exception) {
+        databaseId
+      }
+      firestore = try {
+        FirebaseFirestore.getInstance(app, resDbId)
+      } catch (e: Exception) {
+        Log.w(TAG, "Fallback to default database instance: ${e.message}")
+        FirebaseFirestore.getInstance(app)
+      }
+      Log.d(TAG, "FirebaseFirestore initialized for database: $resDbId")
     } catch (e: Exception) {
       Log.e(TAG, "Failed to initialize FirebaseFirestore: ${e.message}", e)
     }

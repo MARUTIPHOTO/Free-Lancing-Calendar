@@ -111,6 +111,7 @@ class MainActivity : ComponentActivity() {
               viewModel.showIncomingInquiryNotification(newInquiry)
             }
           )
+          viewModel.syncManager = syncManager
           syncManager.startListening(this)
         }
 

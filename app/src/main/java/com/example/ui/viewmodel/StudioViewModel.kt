@@ -436,6 +436,8 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     }
   }
 
+  var syncManager: com.example.data.remote.FirestoreSyncManager? = null
+
   // Inquiry Flow: Admin clicks "Done" -> Date becomes Red (Booked)
   fun confirmInquiryDone(inquiry: InquiryEntity, advanceAmount: Double = 0.0, totalAmount: Double = 0.0) {
     viewModelScope.launch {
@@ -445,6 +447,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
         advanceAmount = advanceAmount,
         totalAmount = totalAmount
       )
+      syncManager?.markInquiryConfirmed(inquiry.clientPhone, inquiry.dateKey)
       _inquiryToConfirm.value = null
       if (_bannerNotification.value?.id == inquiry.id) {
         _bannerNotification.value = null
@@ -455,6 +458,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
   fun declineInquiry(inquiry: InquiryEntity, makeFree: Boolean) {
     viewModelScope.launch {
       repository.declineInquiry(inquiry.id, inquiry.dateKey, makeFree)
+      syncManager?.markInquiryDeclined(inquiry.clientPhone, inquiry.dateKey)
       if (_bannerNotification.value?.id == inquiry.id) {
         _bannerNotification.value = null
       }
@@ -464,6 +468,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
   fun deleteInquiry(inquiry: InquiryEntity) {
     viewModelScope.launch {
       repository.declineInquiry(inquiry.id, inquiry.dateKey, makeFree = true)
+      syncManager?.markInquiryDeclined(inquiry.clientPhone, inquiry.dateKey)
       if (_bannerNotification.value?.id == inquiry.id) {
         _bannerNotification.value = null
       }
