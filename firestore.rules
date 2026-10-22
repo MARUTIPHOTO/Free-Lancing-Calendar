@@ -23,23 +23,8 @@ service cloud.firestore {
              data.status in ['PENDING', 'CONFIRMED', 'DECLINED'];
     }
 
-    match /studios/{studioId} {
-      allow read: if true;
-      allow create, update: if isOwner(studioId) && isValidStudioProfile(request.resource.data);
-      allow delete: if isOwner(studioId);
-
-      match /dates/{dateKey} {
-        allow read: if true;
-        allow create, update: if isOwner(studioId) && isValidStudioDate(request.resource.data);
-        allow delete: if isOwner(studioId);
-      }
-
-      match /inquiries/{inquiryId} {
-        allow read: if isOwner(studioId);
-        allow create: if (isOwner(studioId) || request.resource.data.status == 'PENDING') && isValidStudioInquiry(request.resource.data);
-        allow update: if isOwner(studioId) && isValidStudioInquiry(request.resource.data);
-        allow delete: if isOwner(studioId);
-      }
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
 }

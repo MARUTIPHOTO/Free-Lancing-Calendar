@@ -226,6 +226,10 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     _inquiryToConfirm.value = null
   }
 
+  fun showIncomingInquiryNotification(inquiry: InquiryEntity) {
+    _bannerNotification.value = inquiry
+  }
+
   // --- MULTI-DATE SELECTION FEATURES ---
 
   fun toggleSelectionMode(enabled: Boolean? = null) {

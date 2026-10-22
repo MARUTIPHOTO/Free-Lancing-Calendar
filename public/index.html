@@ -630,14 +630,50 @@ ${breakdownLines}
 ${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
 કૃપા કરીને આ તારીખ કન્ફર્મ કરવા જણાવશો. આભાર!`;
 
-            // Populate Modal Summary
-            document.getElementById('modalSummaryClient').innerText = `${isGujarati ? 'ક્લાયન્ટ' : 'Client'}: ${clientName} (${clientPhone})`;
-            document.getElementById('modalSummaryDates').innerText = `${isGujarati ? 'તારીખો' : 'Dates'}: ${dates.join(', ')}`;
-            document.getElementById('modalSummaryTotal').innerText = `${isGujarati ? 'અંદાજિત બજેટ' : 'Total Budget'}: ₹${total.toLocaleString('en-IN')}`;
+            // Submit to Firebase Firestore cloud so it immediately reaches the Android App
+            const submitBtn = document.getElementById('submitButton');
+            const submitBtnText = document.getElementById('submitButtonText');
+            const originalText = submitBtnText ? submitBtnText.innerText : "";
+            if (submitBtn) submitBtn.disabled = true;
+            if (submitBtnText) submitBtnText.innerText = isGujarati ? "ઇન્ક્વાયરી મોકલાઈ રહી છે... ⏳" : "Submitting Inquiry... ⏳";
 
-            // Show Success Modal
-            document.getElementById('successModal').classList.remove('hidden');
-            lucide.createIcons();
+            const firestoreUrl = 'https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/marutiphoto/inquiries?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc';
+            
+            const firestorePayload = {
+                fields: {
+                    clientName: { stringValue: clientName },
+                    clientPhone: { stringValue: clientPhone },
+                    location: { stringValue: clientLoc || '' },
+                    notes: { stringValue: clientNotes || '' },
+                    dates: { stringValue: dates.join(', ') },
+                    eventType: { stringValue: `${dates.length} Days Shoot` },
+                    totalBudget: { integerValue: String(total) },
+                    status: { stringValue: 'PENDING' },
+                    createdAt: { integerValue: String(Date.now()) }
+                }
+            };
+
+            fetch(firestoreUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(firestorePayload)
+            }).then(resp => {
+                console.log("Firestore submit response:", resp.status);
+            }).catch(err => {
+                console.warn("Firestore submit error:", err);
+            }).finally(() => {
+                if (submitBtn) submitBtn.disabled = false;
+                if (submitBtnText && originalText) submitBtnText.innerText = originalText;
+
+                // Populate Modal Summary
+                document.getElementById('modalSummaryClient').innerText = `${isGujarati ? 'ક્લાયન્ટ' : 'Client'}: ${clientName} (${clientPhone})`;
+                document.getElementById('modalSummaryDates').innerText = `${isGujarati ? 'તારીખો' : 'Dates'}: ${dates.join(', ')}`;
+                document.getElementById('modalSummaryTotal').innerText = `${isGujarati ? 'અંદાજિત બજેટ' : 'Total Budget'}: ₹${total.toLocaleString('en-IN')}`;
+
+                // Show Success Modal
+                document.getElementById('successModal').classList.remove('hidden');
+                lucide.createIcons();
+            });
         }
 
         function closeSuccessModal() {

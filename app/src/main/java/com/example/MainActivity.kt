@@ -101,6 +101,19 @@ class MainActivity : ComponentActivity() {
     setContent {
       MyApplicationTheme {
         val viewModel: StudioViewModel = viewModel(factory = factory)
+
+        // Real-time Firestore sync for incoming online web inquiries
+        androidx.compose.runtime.LaunchedEffect(Unit) {
+          val syncManager = com.example.data.remote.FirestoreSyncManager(
+            context = applicationContext,
+            dao = database.studioDao(),
+            onNewInquiryNotification = { newInquiry ->
+              viewModel.showIncomingInquiryNotification(newInquiry)
+            }
+          )
+          syncManager.startListening(this)
+        }
+
         MainAppContent(viewModel = viewModel)
       }
     }
