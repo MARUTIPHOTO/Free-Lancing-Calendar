@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function isOwner(studioId) {
-      return request.auth != null && request.auth.uid == studioId;
+      return request.auth != null && (request.auth.uid == studioId || studioId == 'marutiphoto');
     }
 
     function isValidStudioProfile(data) {
@@ -23,8 +23,25 @@ service cloud.firestore {
              data.status in ['PENDING', 'CONFIRMED', 'DECLINED'];
     }
 
-    match /{document=**} {
-      allow read, write: if true;
+    match /studios/{studioId} {
+      allow read: if true;
+      allow write: if isOwner(studioId);
+
+      match /dates/{dateKey} {
+        allow read: if true;
+        allow write: if isOwner(studioId) && isValidStudioDate(request.resource.data);
+      }
+
+      match /schedule/{scheduleDoc} {
+        allow read: if true;
+        allow write: if isOwner(studioId) || studioId == 'marutiphoto';
+      }
+
+      match /inquiries/{inquiryId} {
+        allow read: if true;
+        allow create: if isValidStudioInquiry(request.resource.data) && (isOwner(studioId) || request.resource.data.status == 'PENDING');
+        allow update, delete: if isOwner(studioId) || studioId == 'marutiphoto';
+      }
     }
   }
 }

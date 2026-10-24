@@ -636,12 +636,25 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     )
   }
 
+  var currentUserEmail: String = ""
+
+  fun getActiveStudioSlug(): String {
+    val email = currentUserEmail.trim()
+    return if (email.isNotBlank()) {
+      val prefix = email.substringBefore("@").filter { it.isLetterOrDigit() }
+      if (prefix.isNotBlank()) prefix else uiState.value.profile.studioName
+    } else {
+      uiState.value.profile.studioName
+    }
+  }
+
   fun getBookingLink(dateKey: String): String {
     val selected = _selectedMultiDateKeys.value.toList()
+    val slug = getActiveStudioSlug()
     return if (selected.size > 1 && selected.contains(dateKey)) {
-      repository.generateBookingLink(selected, uiState.value.profile.studioName)
+      repository.generateBookingLink(selected, slug)
     } else {
-      repository.generateBookingLink(dateKey, uiState.value.profile.studioName)
+      repository.generateBookingLink(dateKey, slug)
     }
   }
 
@@ -652,7 +665,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
 
   fun getBookingLinkForSelectedDates(): String {
     val dates = _selectedMultiDateKeys.value.toList()
-    return repository.generateBookingLink(dates, uiState.value.profile.studioName)
+    return repository.generateBookingLink(dates, getActiveStudioSlug())
   }
 }
 

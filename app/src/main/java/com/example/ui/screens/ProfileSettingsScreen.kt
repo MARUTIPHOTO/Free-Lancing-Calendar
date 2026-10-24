@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Chat
@@ -39,7 +40,9 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -79,12 +82,17 @@ import java.nio.charset.StandardCharsets
 fun ProfileSettingsScreen(
   uiState: CalendarUiState,
   viewModel: StudioViewModel,
+  currentUserEmail: String = "",
+  onLogout: () -> Unit = {},
   modifier: Modifier = Modifier
 ) {
   val context = LocalContext.current
   val profile = uiState.profile
   val isHindi = profile.selectedLanguage == "HI" || profile.selectedLanguage == "GU"
   val isGujarati = isHindi
+
+  var showLogoutConfirmDialog by remember { mutableStateOf(false) }
+  var showPrivacyPolicyDialog by remember { mutableStateOf(false) }
 
   var showAdPreview by remember { mutableStateOf(false) }
 
@@ -730,6 +738,286 @@ fun ProfileSettingsScreen(
         fontWeight = FontWeight.Bold,
         color = Color.White
       )
+    }
+
+    if (showLogoutConfirmDialog) {
+      AlertDialog(
+        onDismissRequest = { showLogoutConfirmDialog = false },
+        title = { Text(if (isHindi) "लॉगआउट करें? 🚪" else "Log Out? 🚪") },
+        text = { Text(if (isHindi) "क्या आप निश्चित रूप से अपने अकाउंट से लॉगआउट करना चाहते हैं?" else "Are you sure you want to log out from this account?") },
+        confirmButton = {
+          Button(
+            onClick = {
+              showLogoutConfirmDialog = false
+              onLogout()
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+          ) {
+            Text(if (isHindi) "लॉगआउट" else "Log Out", color = Color.White, fontWeight = FontWeight.Bold)
+          }
+        },
+        dismissButton = {
+          OutlinedButton(onClick = { showLogoutConfirmDialog = false }) {
+            Text(if (isHindi) "रद्द करें" else "Cancel")
+          }
+        }
+      )
+    }
+
+    if (showPrivacyPolicyDialog) {
+      val privacyPolicyUrl = "https://marutiphoto.github.io/Free-Lancing-Calendar/public/privacy-policy.html"
+      AlertDialog(
+        onDismissRequest = { showPrivacyPolicyDialog = false },
+        title = {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Lock, contentDescription = null, tint = Color(0xFF16A34A), modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+              text = "Privacy Policy",
+              fontWeight = FontWeight.Bold,
+              fontSize = 17.sp,
+              color = Color(0xFF0F172A)
+            )
+          }
+        },
+        text = {
+          Column(
+            modifier = Modifier
+              .fillMaxWidth()
+              .height(340.dp)
+              .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            Text(
+              text = "FreeLancing Calendar • Maruti Photo & Films",
+              fontWeight = FontWeight.Bold,
+              fontSize = 13.sp,
+              color = Color(0xFF1E293B)
+            )
+            Text(
+              text = "Effective Date: October 24, 2026\nDeveloper Email: marutiphoto1234@gmail.com",
+              fontSize = 11.sp,
+              color = Color(0xFF64748B)
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = "1. Information We Collect",
+              fontWeight = FontWeight.Bold,
+              fontSize = 12.sp,
+              color = Color(0xFF0F172A)
+            )
+            Text(
+              text = "• Account: Your name and email address through Google Sign-In via Firebase Auth.\n• Bookings: Event dates, client contact numbers, rates, and photoshoot assignments stored on-device and synced via secure Google Firestore.\n• Network state: To ensure seamless online/offline data persistence.",
+              fontSize = 11.sp,
+              color = Color(0xFF334155),
+              lineHeight = 16.sp
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = "2. Device Permissions",
+              fontWeight = FontWeight.Bold,
+              fontSize = 12.sp,
+              color = Color(0xFF0F172A)
+            )
+            Text(
+              text = "• INTERNET & ACCESS_NETWORK_STATE: For Google Sign-In and cloud calendar backup.\n• POST_NOTIFICATIONS: For schedule reminders and incoming client booking inquiries.",
+              fontSize = 11.sp,
+              color = Color(0xFF334155),
+              lineHeight = 16.sp
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = "3. Third-Party Services",
+              fontWeight = FontWeight.Bold,
+              fontSize = 12.sp,
+              color = Color(0xFF0F172A)
+            )
+            Text(
+              text = "• Google Firebase (Authentication & Cloud Firestore)\n• Google Play Services / Credential Manager\n• Google AdMob (Advertising)",
+              fontSize = 11.sp,
+              color = Color(0xFF334155),
+              lineHeight = 16.sp
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = "4. User Rights & Data Deletion",
+              fontWeight = FontWeight.Bold,
+              fontSize = 12.sp,
+              color = Color(0xFF0F172A)
+            )
+            Text(
+              text = "You have full ownership of your data. You can delete individual events directly in the app. To request permanent deletion of your account and cloud records, email marutiphoto1234@gmail.com with subject 'Data Deletion Request'.",
+              fontSize = 11.sp,
+              color = Color(0xFF334155),
+              lineHeight = 16.sp
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+              text = "5. Children's Privacy",
+              fontWeight = FontWeight.Bold,
+              fontSize = 12.sp,
+              color = Color(0xFF0F172A)
+            )
+            Text(
+              text = "FreeLancing Calendar is intended for professionals aged 18+ and does not knowingly collect data from children under 13.",
+              fontSize = 11.sp,
+              color = Color(0xFF334155),
+              lineHeight = 16.sp
+            )
+          }
+        },
+        confirmButton = {
+          Button(
+            onClick = {
+              try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(privacyPolicyUrl))
+                context.startActivity(intent)
+              } catch (e: Exception) {
+                Toast.makeText(context, "Cannot open browser: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+              }
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A))
+          ) {
+            Text("Open Web Link ↗", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+          }
+        },
+        dismissButton = {
+          OutlinedButton(onClick = { showPrivacyPolicyDialog = false }) {
+            Text(if (isHindi) "बंद करें" else "Close", fontSize = 12.sp)
+          }
+        }
+      )
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
+    // Privacy Policy Card (Google Play Store compliance)
+    Card(
+      shape = RoundedCornerShape(12.dp),
+      colors = CardDefaults.cardColors(containerColor = Color(0xFFF0FDF4)),
+      border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBBF7D0)),
+      modifier = Modifier
+        .fillMaxWidth()
+        .clickable { showPrivacyPolicyDialog = true }
+        .testTag("privacy_policy_card")
+    ) {
+      Row(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+      ) {
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          modifier = Modifier.weight(1f)
+        ) {
+          Surface(
+            shape = CircleShape,
+            color = Color(0xFF16A34A),
+            modifier = Modifier.size(36.dp)
+          ) {
+            Box(contentAlignment = Alignment.Center) {
+              Icon(Icons.Default.Lock, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+            }
+          }
+          Spacer(modifier = Modifier.width(12.dp))
+          Column {
+            Text(
+              text = if (isHindi) "गोपनीयता नीति (Privacy Policy) 📜" else "Privacy Policy 📜",
+              fontSize = 13.sp,
+              fontWeight = FontWeight.Bold,
+              color = Color(0xFF166534)
+            )
+            Text(
+              text = if (isHindi) "Google Play Store के अनुसार डेटा सुरक्षा व नीति पढ़ें" else "Google Play Store compliant data & privacy policy",
+              fontSize = 11.sp,
+              color = Color(0xFF15803D)
+            )
+          }
+        }
+
+        OutlinedButton(
+          onClick = { showPrivacyPolicyDialog = true },
+          colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF16A34A)),
+          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF22C55E)),
+          shape = RoundedCornerShape(8.dp)
+        ) {
+          Text(text = if (isHindi) "देखें" else "View", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        }
+      }
+    }
+
+    Spacer(modifier = Modifier.height(14.dp))
+
+    // Account Details & Logout Card
+    Card(
+      shape = RoundedCornerShape(12.dp),
+      colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2)),
+      border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFCA5A5)),
+      modifier = Modifier.fillMaxWidth()
+    ) {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+      ) {
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Column {
+            Text(
+              text = if (isHindi) "सक्रिय लॉगिन अकाउंट (Active Account)" else "Active Login Account",
+              fontSize = 11.sp,
+              fontWeight = FontWeight.Bold,
+              color = Color(0xFF991B1B)
+            )
+            Text(
+              text = if (currentUserEmail.isNotBlank()) currentUserEmail else "marutiphoto1234@gmail.com",
+              fontSize = 13.sp,
+              fontWeight = FontWeight.SemiBold,
+              color = Color(0xFF1E293B)
+            )
+          }
+
+          Surface(
+            shape = CircleShape,
+            color = Color(0xFFDC2626),
+            modifier = Modifier.size(32.dp)
+          ) {
+            Box(contentAlignment = Alignment.Center) {
+              Icon(Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+            }
+          }
+        }
+
+        OutlinedButton(
+          onClick = { showLogoutConfirmDialog = true },
+          colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+          border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444)),
+          shape = RoundedCornerShape(8.dp),
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .testTag("logout_button")
+        ) {
+          Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, modifier = Modifier.size(18.dp))
+          Spacer(modifier = Modifier.width(6.dp))
+          Text(
+            text = if (isHindi) "अकाउंट से लॉगआउट करें (Log Out 🚪)" else "Log Out from Account 🚪",
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
+          )
+        }
+      }
     }
 
     Spacer(modifier = Modifier.height(28.dp))

@@ -50,6 +50,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -473,7 +474,8 @@ fun UpcomingBookingsScreen(
   bookingToEdit?.let { booking ->
     EditBookingDialog(
       booking = booking,
-      isGujarati = isGujarati,
+      profile = uiState.profile,
+      isHindi = isHindi,
       onDismiss = { bookingToEdit = null },
       onSave = { totalPkg, advance, assignments, notes ->
         viewModel.updateBookingDateAssignments(
@@ -484,7 +486,7 @@ fun UpcomingBookingsScreen(
         )
         Toast.makeText(
           context,
-          if (isGujarati) "बुकिंग विवरण और तारीखें सफलतापूर्वक अपडेट हो गईं 💾" else "Booking details & dates updated successfully 💾",
+          if (isHindi) "बुकिंग विवरण, काम और कुल पैकेज सफलतापूर्वक अपडेट हो गया 💾" else "Booking details, work & total package updated successfully 💾",
           Toast.LENGTH_SHORT
         ).show()
         bookingToEdit = null
@@ -1174,19 +1176,12 @@ class EditableBookingDate(
 @Composable
 fun EditBookingDialog(
   booking: GroupedClientBooking,
-  isGujarati: Boolean,
+  profile: com.example.data.local.StudioProfileEntity,
+  isHindi: Boolean,
   onDismiss: () -> Unit,
   onSave: (totalPkg: Double, advance: Double, assignments: List<DateWorkAssignment>, notes: String) -> Unit
 ) {
   val context = LocalContext.current
-
-  var totalAmountText by remember {
-    mutableStateOf(if (booking.totalPackageAmount > 0) booking.totalPackageAmount.toInt().toString() else "")
-  }
-  var advanceAmountText by remember {
-    mutableStateOf(if (booking.totalAdvance > 0) booking.totalAdvance.toInt().toString() else "")
-  }
-  var customNote by remember { mutableStateOf(booking.customNote) }
 
   // Date-wise editable state items
   val editableDates = remember(booking) {
@@ -1198,6 +1193,40 @@ fun EditBookingDialog(
         initialLocation = d.location.ifBlank { booking.location }
       )
     }
+  }
+
+  fun getWorkRate(workType: String): Double {
+    val lower = workType.lowercase().trim()
+    return when {
+      lower.contains("candid") -> if (profile.rateCandidPhoto > 0) profile.rateCandidPhoto else 10000.0
+      lower.contains("cinematic") || lower.contains("cinema") -> if (profile.rateCinematicVideo > 0) profile.rateCinematicVideo else 12000.0
+      lower.contains("drone") -> if (profile.rateDrone > 0) profile.rateDrone else 8000.0
+      lower.contains("pre-wedding") || lower.contains("pre wedding") -> if (profile.ratePreWedding > 0) profile.ratePreWedding else 15000.0
+      lower.contains("traditional video") -> if (profile.rateTraditionalVideo > 0) profile.rateTraditionalVideo else 7000.0
+      lower.contains("traditional photo") -> if (profile.rateTraditionalPhoto > 0) profile.rateTraditionalPhoto else 7000.0
+      lower.contains("video") -> if (profile.rateTraditionalVideo > 0) profile.rateTraditionalVideo else 7000.0
+      lower.contains("photo") -> if (profile.rateTraditionalPhoto > 0) profile.rateTraditionalPhoto else 7000.0
+      else -> if (profile.defaultDayRate > 0) profile.defaultDayRate else 7000.0
+    }
+  }
+
+  var totalAmountText by remember {
+    mutableStateOf(
+      if (booking.totalPackageAmount > 0) {
+        booking.totalPackageAmount.toInt().toString()
+      } else {
+        editableDates.sumOf { getWorkRate(it.currentWorkType) }.toInt().toString()
+      }
+    )
+  }
+  var advanceAmountText by remember {
+    mutableStateOf(if (booking.totalAdvance > 0) booking.totalAdvance.toInt().toString() else "")
+  }
+  var customNote by remember { mutableStateOf(booking.customNote) }
+
+  fun updatePackageFromWorkTypes() {
+    val sum = editableDates.sumOf { getWorkRate(it.currentWorkType) }
+    totalAmountText = sum.toInt().toString()
   }
 
   val total = totalAmountText.toDoubleOrNull() ?: 0.0
@@ -1254,13 +1283,13 @@ fun EditBookingDialog(
     title = {
       Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Text(
-          text = if (isGujarati) "बुकिंग विवरण और तारीख बदलें ✏️" else "Edit Booking & Dates ✏️",
+          text = if (isHindi) "बुकिंग विवरण और तारीख बदलें ✏️" else "Edit Booking & Dates ✏️",
           fontSize = 17.sp,
           fontWeight = FontWeight.Bold,
           color = MaterialTheme.colorScheme.onSurface
         )
         Text(
-          text = booking.clientName.ifBlank { if (isGujarati) "क्लाइंट" else "Client" } +
+          text = booking.clientName.ifBlank { if (isHindi) "क्लाइंट" else "Client" } +
             if (booking.clientPhone.isNotBlank()) " (${booking.clientPhone})" else "",
           fontSize = 12.sp,
           color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1278,17 +1307,47 @@ fun EditBookingDialog(
         OutlinedTextField(
           value = totalAmountText,
           onValueChange = { totalAmountText = it.filter { ch -> ch.isDigit() } },
-          label = { Text(if (isGujarati) "कुल पैकेज राशि (₹)" else "Total Package (₹)") },
+          label = { Text(if (isHindi) "कुल पैकेज राशि (₹)" else "Total Package (₹)") },
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
           singleLine = true,
           modifier = Modifier.fillMaxWidth().testTag("edit_total_package_input")
         )
 
+        // Work Rate Auto-Calculation Indicator & Apply Button
+        val calculatedTotal = editableDates.sumOf { getWorkRate(it.currentWorkType) }
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
+        ) {
+          Text(
+            text = if (isHindi) "⚡ काम अनुसार दर: ₹${calculatedTotal.toInt()}" else "⚡ Rate by services: ₹${calculatedTotal.toInt()}",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color(0xFFD97706)
+          )
+          if (totalAmountText != calculatedTotal.toInt().toString()) {
+            TextButton(
+              onClick = {
+                totalAmountText = calculatedTotal.toInt().toString()
+              },
+              contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+              Text(
+                text = if (isHindi) "यह दर लागू करें" else "Apply Rate",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFB45309)
+              )
+            }
+          }
+        }
+
         // 2. Advance Amount
         OutlinedTextField(
           value = advanceAmountText,
           onValueChange = { advanceAmountText = it.filter { ch -> ch.isDigit() } },
-          label = { Text(if (isGujarati) "एडवांस जमा राशि (₹)" else "Advance Paid (₹)") },
+          label = { Text(if (isHindi) "एडवांस जमा राशि (₹)" else "Advance Paid (₹)") },
           keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
           singleLine = true,
           modifier = Modifier.fillMaxWidth().testTag("edit_advance_input")
@@ -1312,7 +1371,7 @@ fun EditBookingDialog(
             verticalAlignment = Alignment.CenterVertically
           ) {
             Text(
-              text = if (isGujarati) "शेष राशि (Balance):" else "Remaining Balance:",
+              text = if (isHindi) "शेष राशि (Balance):" else "Remaining Balance:",
               fontSize = 11.sp,
               fontWeight = FontWeight.SemiBold,
               color = if (balance > 0) Color(0xFF991B1B) else Color(0xFF166534)
@@ -1329,13 +1388,13 @@ fun EditBookingDialog(
         // Section Divider Header: Date & Work Assignment
         Column(modifier = Modifier.fillMaxWidth()) {
           Text(
-            text = if (isGujarati) "📅 तारीख और काम का विवरण (Date & Work):" else "📅 Date & Work Breakdown:",
+            text = if (isHindi) "📅 तारीख और काम का विवरण (Date & Work):" else "📅 Date & Work Breakdown:",
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF991B1B)
           )
           Text(
-            text = if (isGujarati) "तारीख बदलने या प्रत्येक तारीख का काम सेट करने के लिए नीचे देखें:" else "Assign work per date or change booking dates below:",
+            text = if (isHindi) "काम बदलने पर ऊपर कुल पैकेज राशि अपने आप अपडेट हो जाएगी:" else "Changing work automatically updates the total package above:",
             fontSize = 10.sp,
             color = Color(0xFF64748B)
           )
@@ -1368,7 +1427,7 @@ fun EditBookingDialog(
                   )
                   if (dateItem.currentDateKey != dateItem.originalKey) {
                     Text(
-                      text = if (isGujarati) "🔄 नई तारीख (पुरानी: ${dateItem.originalKey})" else "🔄 Changed from ${dateItem.originalKey}",
+                      text = if (isHindi) "🔄 नई तारीख (पुरानी: ${dateItem.originalKey})" else "🔄 Changed from ${dateItem.originalKey}",
                       fontSize = 10.sp,
                       fontWeight = FontWeight.Bold,
                       color = Color(0xFFB45309)
@@ -1386,7 +1445,7 @@ fun EditBookingDialog(
                   Icon(Icons.Default.CalendarToday, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
                   Spacer(modifier = Modifier.width(4.dp))
                   Text(
-                    text = if (isGujarati) "तारीख बदलें" else "Change Date",
+                    text = if (isHindi) "तारीख बदलें" else "Change Date",
                     fontSize = 10.sp,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
@@ -1396,13 +1455,13 @@ fun EditBookingDialog(
 
               // Work / Service Type Header
               Text(
-                text = if (isGujarati) "🎥 इस तारीख को क्या काम करना है? (Work):" else "🎥 Service / Work for this date:",
+                text = if (isHindi) "🎥 इस तारीख को क्या काम करना है? (Work):" else "🎥 Service / Work for this date:",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF78350F)
               )
 
-              // Quick Service Chips
+              // Quick Service Chips with individual rate display & auto-update
               FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -1410,6 +1469,7 @@ fun EditBookingDialog(
               ) {
                 quickServices.forEach { service ->
                   val isSelected = dateItem.currentWorkType.contains(service, ignoreCase = true)
+                  val sRate = getWorkRate(service).toInt()
                   Surface(
                     shape = RoundedCornerShape(6.dp),
                     color = if (isSelected) Color(0xFFD97706) else Color.White,
@@ -1419,10 +1479,11 @@ fun EditBookingDialog(
                     ),
                     modifier = Modifier.clickable {
                       dateItem.currentWorkType = service
+                      updatePackageFromWorkTypes()
                     }
                   ) {
                     Text(
-                      text = service,
+                      text = "$service (₹$sRate)",
                       fontSize = 10.sp,
                       fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                       color = if (isSelected) Color.White else Color(0xFF334155),
@@ -1435,8 +1496,11 @@ fun EditBookingDialog(
               // Work Type Text Field
               OutlinedTextField(
                 value = dateItem.currentWorkType,
-                onValueChange = { dateItem.currentWorkType = it },
-                label = { Text(if (isGujarati) "काम का विवरण (जैसे Traditional Video)" else "Service (e.g. Traditional Video)") },
+                onValueChange = {
+                  dateItem.currentWorkType = it
+                  updatePackageFromWorkTypes()
+                },
+                label = { Text(if (isHindi) "काम का विवरण (जैसे Traditional Video)" else "Service (e.g. Traditional Video)") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().testTag("edit_date_work_${dateItem.originalKey}")
               )
@@ -1445,7 +1509,7 @@ fun EditBookingDialog(
               OutlinedTextField(
                 value = dateItem.currentLocation,
                 onValueChange = { dateItem.currentLocation = it },
-                label = { Text(if (isGujarati) "स्थान / वेन्यू (Location / Venue)" else "Location / Venue") },
+                label = { Text(if (isHindi) "स्थान / वेन्यू (Location / Venue)" else "Location / Venue") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().testTag("edit_date_loc_${dateItem.originalKey}")
               )
@@ -1457,7 +1521,7 @@ fun EditBookingDialog(
         OutlinedTextField(
           value = customNote,
           onValueChange = { customNote = it },
-          label = { Text(if (isGujarati) "विशेष नोट / सामान्य विवरण" else "Notes / Overall Details") },
+          label = { Text(if (isHindi) "विशेष नोट / सामान्य विवरण" else "Notes / Overall Details") },
           minLines = 2,
           maxLines = 5,
           modifier = Modifier.fillMaxWidth().testTag("edit_notes_input")
@@ -1481,7 +1545,7 @@ fun EditBookingDialog(
         shape = RoundedCornerShape(8.dp),
         modifier = Modifier.testTag("save_edit_booking_btn")
       ) {
-        Text(if (isGujarati) "सेव करें 💾" else "Save Changes 💾", color = Color.White, fontWeight = FontWeight.Bold)
+        Text(if (isHindi) "सेव करें 💾" else "Save Changes 💾", color = Color.White, fontWeight = FontWeight.Bold)
       }
     },
     dismissButton = {
@@ -1489,7 +1553,7 @@ fun EditBookingDialog(
         onClick = onDismiss,
         modifier = Modifier.testTag("cancel_edit_booking_btn")
       ) {
-        Text(if (isGujarati) "रद्द करें" else "Cancel")
+        Text(if (isHindi) "रद्द करें" else "Cancel")
       }
     }
   )

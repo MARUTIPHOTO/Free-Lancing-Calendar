@@ -33,7 +33,9 @@ class FirestoreSyncManager(
   private val TAG = "FirestoreSyncManager"
   private val databaseId = "ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c"
   private val apiKey = "AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc"
-  private val queryUrl = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/$databaseId/documents/studios/marutiphoto:runQuery?key=$apiKey"
+  var currentStudioSlug: String = "marutiphoto"
+  private val queryUrl: String
+    get() = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/$databaseId/documents/studios/$currentStudioSlug:runQuery?key=$apiKey"
 
   private var listenerRegistration: ListenerRegistration? = null
   private var firestore: FirebaseFirestore? = null
@@ -104,7 +106,7 @@ class FirestoreSyncManager(
     var connection: HttpURLConnection? = null
     try {
       val bookedList = dao.getAllDates().filter { it.status == "BOOKED" }.map { it.dateKey }
-      val scheduleUrl = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/marutiphoto/schedule/booked_dates?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc"
+      val scheduleUrl = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/$currentStudioSlug/schedule/booked_dates?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc"
       val url = URL(scheduleUrl)
       connection = (url.openConnection() as HttpURLConnection).apply {
         requestMethod = "POST"

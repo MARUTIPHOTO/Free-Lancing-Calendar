@@ -57,6 +57,7 @@ import com.example.ui.components.ShareMessageDialog
 import com.example.ui.screens.CalendarScreen
 import com.example.ui.screens.ClientPortalScreen
 import com.example.ui.screens.InquiryInboxScreen
+import com.example.ui.screens.LoginScreen
 import com.example.ui.screens.ProfileSettingsScreen
 import com.example.ui.screens.UpcomingBookingsScreen
 import com.example.ui.theme.MyApplicationTheme
@@ -119,27 +120,66 @@ class MainActivity : ComponentActivity() {
           }
         }
 
+        val auth = androidx.compose.runtime.remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
+        var currentUser by androidx.compose.runtime.remember { mutableStateOf(auth.currentUser) }
+        var isDemoLoggedIn by rememberSaveable { mutableStateOf(false) }
+
+        val activeEmail = currentUser?.email ?: if (isDemoLoggedIn) "marutiphoto1234@gmail.com" else ""
+
+        // Update active email in ViewModel and FirestoreSyncManager
+        androidx.compose.runtime.LaunchedEffect(activeEmail) {
+          viewModel.currentUserEmail = activeEmail
+          viewModel.syncManager?.currentStudioSlug = viewModel.getActiveStudioSlug()
+        }
+
         // Real-time Firestore sync for incoming online web inquiries
-        androidx.compose.runtime.LaunchedEffect(Unit) {
+        androidx.compose.runtime.LaunchedEffect(viewModel.getActiveStudioSlug()) {
           val syncManager = com.example.data.remote.FirestoreSyncManager(
             context = applicationContext,
             dao = database.studioDao(),
             onNewInquiryNotification = { newInquiry ->
               viewModel.showIncomingInquiryNotification(newInquiry)
             }
-          )
+          ).apply {
+            currentStudioSlug = viewModel.getActiveStudioSlug()
+          }
           viewModel.syncManager = syncManager
           syncManager.startListening(this)
         }
 
-        MainAppContent(viewModel = viewModel)
+        if (currentUser == null && !isDemoLoggedIn) {
+          LoginScreen(
+            onLoginSuccess = { user ->
+              currentUser = user ?: auth.currentUser
+              if (currentUser == null) {
+                isDemoLoggedIn = true
+              }
+            },
+            isHindi = true
+          )
+        } else {
+          MainAppContent(
+            viewModel = viewModel,
+            currentUserEmail = activeEmail,
+            onLogout = {
+              try { auth.signOut() } catch (e: Exception) {}
+              currentUser = null
+              isDemoLoggedIn = false
+              viewModel.currentUserEmail = ""
+            }
+          )
+        }
       }
     }
   }
 }
 
 @Composable
-fun MainAppContent(viewModel: StudioViewModel) {
+fun MainAppContent(
+  viewModel: StudioViewModel,
+  currentUserEmail: String = "",
+  onLogout: () -> Unit = {}
+) {
   val uiState by viewModel.uiState.collectAsState()
   val isHindi = uiState.profile.selectedLanguage == "HI" || uiState.profile.selectedLanguage == "GU"
   val isGujarati = isHindi
@@ -325,7 +365,12 @@ fun MainAppContent(viewModel: StudioViewModel) {
             AppNavDestination.NOTIFICATIONS -> InquiryInboxScreen(uiState = uiState, viewModel = viewModel)
             AppNavDestination.CLIENT_PORTAL -> ClientPortalScreen(uiState = uiState, viewModel = viewModel)
             AppNavDestination.BOOKINGS_LIST -> UpcomingBookingsScreen(uiState = uiState, viewModel = viewModel)
-            AppNavDestination.PROFILE -> ProfileSettingsScreen(uiState = uiState, viewModel = viewModel)
+            AppNavDestination.PROFILE -> ProfileSettingsScreen(
+              uiState = uiState,
+              viewModel = viewModel,
+              currentUserEmail = currentUserEmail,
+              onLogout = onLogout
+            )
           }
         }
       }

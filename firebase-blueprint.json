@@ -58,6 +58,19 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["clientName", "clientPhone", "status"]
+    },
+    "StudioSchedule": {
+      "title": "StudioSchedule",
+      "description": "Aggregated list of booked dates synchronized for the public booking portal",
+      "type": "object",
+      "properties": {
+        "dates": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["dates"]
     }
   },
   "firestore": {
@@ -68,6 +81,10 @@
     "/studios/{studioId}/dates/{dateKey}": {
       "schema": { "$ref": "#/entities/StudioDate" },
       "description": "Calendar dates and status (Free / Inquiry / Booked)"
+    },
+    "/studios/{studioId}/schedule/{scheduleDoc}": {
+      "schema": { "$ref": "#/entities/StudioSchedule" },
+      "description": "Public aggregated booked dates schedule document"
     },
     "/studios/{studioId}/inquiries/{inquiryId}": {
       "schema": { "$ref": "#/entities/StudioInquiry" },

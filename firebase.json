@@ -7,10 +7,6 @@
     {
       "database": "ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c",
       "rules": "firestore.rules"
-    },
-    {
-      "database": "(default)",
-      "rules": "firestore.rules"
     }
   ],
   "emulators": {
