@@ -17,7 +17,7 @@ import com.example.data.local.InquiryEntity
 
 object NotificationHelper {
   const val CHANNEL_ID = "maruti_booking_alerts_v6"
-  const val CHANNEL_NAME = "Booking Alerts (મેસેજ ટોન એલર્ટ)"
+  const val CHANNEL_NAME = "Booking Alerts (संदेश टोन अलर्ट)"
 
   fun createNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -69,29 +69,29 @@ object NotificationHelper {
       )
 
       val title = if (isBookedConflict) {
-        "⚠️ નવી ઇન્ક્વાયરી: ${inquiry.clientName} (તારીખ પહેલેથી બુક છે!)"
+        "⚠️ नई पूछताछ: ${inquiry.clientName} (तारीख पहले से बुक है!)"
       } else {
-        "🔔 નવી બુકિંગ ઇન્ક્વાયરી: ${inquiry.clientName} (તારીખ ખાલી છે)"
+        "🔔 नई बुकिंग पूछताछ: ${inquiry.clientName} (तारीख खाली है)"
       }
 
       val summaryText = if (isBookedConflict) {
-        "⚠️ તારીખ બુક થયેલ છે! 📅 ${inquiry.dateKey} | 📞 ${inquiry.clientPhone}"
+        "⚠️ तारीख बुक है! 📅 ${inquiry.dateKey} | 📞 ${inquiry.clientPhone}"
       } else {
-        "🟢 ખાલી તારીખ | 📅 ${inquiry.dateKey} | 📞 ${inquiry.clientPhone}"
+        "🟢 खाली तारीख | 📅 ${inquiry.dateKey} | 📞 ${inquiry.clientPhone}"
       }
 
       val bigDetails = buildString {
         if (isBookedConflict) {
-          append("⚠️ એલર્ટ: આ તારીખ તમારા કેલેન્ડરમાં પહેલેથી બુક છે!\n")
+          append("⚠️ अलर्ट: यह तारीख आपके कैलेंडर में पहले से बुक है!\n")
         } else {
-          append("🟢 તારીખ તમારા કેલેન્ડરમાં ખાલી (Available) છે!\n")
+          append("🟢 तारीख आपके कैलेंडर में खाली (Available) है!\n")
         }
-        append("👤 ક્લાયન્ટ: ${inquiry.clientName}\n")
-        append("📞 મોબાઈલ: ${inquiry.clientPhone}\n")
-        append("📅 તારીખ: ${inquiry.dateKey}\n")
-        if (inquiry.location.isNotBlank()) append("📍 સ્થળ: ${inquiry.location}\n")
-        if (inquiry.notes.isNotBlank()) append("📝 નોંધ: ${inquiry.notes}\n")
-        append("👉 ઇન્ક્વાયરી જોવા અને એક્શન લેવા અહીં ટેપ કરો")
+        append("👤 क्लाइंट: ${inquiry.clientName}\n")
+        append("📞 मोबाइल: ${inquiry.clientPhone}\n")
+        append("📅 तारीख: ${inquiry.dateKey}\n")
+        if (inquiry.location.isNotBlank()) append("📍 स्थान: ${inquiry.location}\n")
+        if (inquiry.notes.isNotBlank()) append("📝 नोट: ${inquiry.notes}\n")
+        append("👉 पूछताछ देखने और एक्शन लेने के लिए यहाँ टैप करें")
       }
 
       val builder = NotificationCompat.Builder(context, CHANNEL_ID)

@@ -26,10 +26,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EventNote
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.LocationOn
@@ -60,10 +62,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material.icons.filled.CalendarToday
 import com.example.data.local.StudioDateEntity
 import com.example.data.model.DateStatus
+import com.example.data.model.DateWorkAssignment
 import com.example.ui.theme.StatusRed
 import com.example.ui.util.StringsHelper
 import com.example.ui.viewmodel.CalendarUiState
@@ -98,6 +105,7 @@ fun UpcomingBookingsScreen(
   var bookingToDelete by remember { mutableStateOf<GroupedClientBooking?>(null) }
   var singleDateToDelete by remember { mutableStateOf<StudioDateEntity?>(null) }
   var bookingDetailToView by remember { mutableStateOf<GroupedClientBooking?>(null) }
+  var bookingToEdit by remember { mutableStateOf<GroupedClientBooking?>(null) }
 
   // Group multiple dates for the same client into a single card
   val groupedBookings = remember(uiState.datesMap, searchQuery) {
@@ -184,7 +192,7 @@ fun UpcomingBookingsScreen(
 
       Column(modifier = Modifier.weight(1f)) {
         Text(
-          text = if (isHindi) "कन्फ़र्म बुकिंग्स (Bookings 🔴)" else "Confirmed Bookings List 🔴",
+          text = if (isHindi) "कन्फर्म बुकिंग्स (Bookings 🔴)" else "Confirmed Bookings List 🔴",
           fontSize = 17.sp,
           fontWeight = FontWeight.Bold,
           color = MaterialTheme.colorScheme.onBackground
@@ -232,7 +240,7 @@ fun UpcomingBookingsScreen(
             color = Color(0xFFF87171)
           )
           Text(
-            text = if (isHindi) "ક્લાયન્ટ્સ / દિવસો" else "Clients / Days",
+            text = if (isHindi) "क्लाइंट्स / दिन" else "Clients / Days",
             fontSize = 10.sp,
             color = Color(0xFFCBD5E1)
           )
@@ -246,7 +254,7 @@ fun UpcomingBookingsScreen(
             color = Color(0xFF4ADE80)
           )
           Text(
-            text = if (isHindi) "એડવાન્સ જમા" else "Advance Recv",
+            text = if (isHindi) "एडवांस जमा" else "Advance Recv",
             fontSize = 10.sp,
             color = Color(0xFFCBD5E1)
           )
@@ -260,7 +268,7 @@ fun UpcomingBookingsScreen(
             color = Color(0xFFFBBF24)
           )
           Text(
-            text = if (isHindi) "કુલ બિઝનેસ" else "Total Business",
+            text = if (isHindi) "कुल व्यापार" else "Total Business",
             fontSize = 10.sp,
             color = Color(0xFFCBD5E1)
           )
@@ -274,7 +282,7 @@ fun UpcomingBookingsScreen(
     OutlinedTextField(
       value = searchQuery,
       onValueChange = { searchQuery = it },
-      label = { Text(if (isHindi) "ક્લાયન્ટ નામ, ઇવેન્ટ કે તારીખ શોધો..." else "Search client, event, or date...") },
+      label = { Text(if (isHindi) "क्लाइंट नाम, इवेंट या तारीख खोजें..." else "Search client, event, or date...") },
       leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
       singleLine = true,
       modifier = Modifier.fillMaxWidth().testTag("search_bookings_input")
@@ -294,7 +302,7 @@ fun UpcomingBookingsScreen(
           Icon(Icons.Default.PhotoCamera, contentDescription = null, tint = Color.Gray.copy(alpha = 0.5f), modifier = Modifier.size(48.dp))
           Spacer(modifier = Modifier.height(6.dp))
           Text(
-            text = if (isHindi) "કોઈ કન્ફર્મ બુકિંગ મળ્યું નથી" else "No confirmed bookings found",
+            text = if (isHindi) "कोई कन्फर्म बुकिंग नहीं मिली" else "No confirmed bookings found",
             fontSize = 13.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
           )
@@ -321,6 +329,9 @@ fun UpcomingBookingsScreen(
             onDeleteBookingClick = {
               bookingToDelete = group
             },
+            onEditBookingClick = {
+              bookingToEdit = group
+            },
             onViewDetailsClick = {
               bookingDetailToView = group
             }
@@ -334,7 +345,7 @@ fun UpcomingBookingsScreen(
 
   // 1. Delete ENTIRE Client Booking Confirmation Dialog
   bookingToDelete?.let { booking ->
-    val clientLabel = booking.clientName.ifBlank { if (isGujarati) "આ ક્લાયન્ટ" else "this client" }
+    val clientLabel = booking.clientName.ifBlank { if (isGujarati) "यह क्लाइंट" else "this client" }
     AlertDialog(
       onDismissRequest = { bookingToDelete = null },
       icon = {
@@ -446,12 +457,41 @@ fun UpcomingBookingsScreen(
     )
   }
 
-  // 3. Full Booking Detail Dialog (વિગત જુઓ 👁️)
+  // 3. Full Booking Detail Dialog (विवरण देखें 👁️)
   bookingDetailToView?.let { booking ->
     BookingDetailDialog(
       booking = booking,
       isGujarati = isGujarati,
-      onDismiss = { bookingDetailToView = null }
+      onDismiss = { bookingDetailToView = null },
+      onEditClick = {
+        bookingToEdit = booking
+      }
+    )
+  }
+
+  // 4. Edit Booking Dialog (विवरण संपादित करें ✏️)
+  bookingToEdit?.let { booking ->
+    EditBookingDialog(
+      booking = booking,
+      isGujarati = isGujarati,
+      onDismiss = { bookingToEdit = null },
+      onSave = { totalPkg, advance, assignments, notes ->
+        viewModel.updateBookingDateAssignments(
+          assignments = assignments,
+          totalPackageAmount = totalPkg,
+          advanceAmount = advance,
+          commonNotes = notes
+        )
+        Toast.makeText(
+          context,
+          if (isGujarati) "बुकिंग विवरण और तारीखें सफलतापूर्वक अपडेट हो गईं 💾" else "Booking details & dates updated successfully 💾",
+          Toast.LENGTH_SHORT
+        ).show()
+        bookingToEdit = null
+        if (bookingDetailToView?.groupKey == booking.groupKey) {
+          bookingDetailToView = null
+        }
+      }
     )
   }
 }
@@ -464,6 +504,7 @@ private fun GroupedBookedCard(
   onDateChipClick: (String) -> Unit,
   onDeleteDateClick: (StudioDateEntity) -> Unit,
   onDeleteBookingClick: () -> Unit,
+  onEditBookingClick: () -> Unit,
   onViewDetailsClick: () -> Unit
 ) {
   val context = LocalContext.current
@@ -502,7 +543,7 @@ private fun GroupedBookedCard(
 
         Column(modifier = Modifier.weight(1f)) {
           Text(
-            text = group.clientName.ifBlank { if (isGujarati) "ક્લાયન્ટ" else "Client" },
+            text = group.clientName.ifBlank { if (isGujarati) "क्लाइंट" else "Client" },
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -516,6 +557,23 @@ private fun GroupedBookedCard(
             )
           }
         }
+
+        // Edit Booking Button (✏️)
+        IconButton(
+          onClick = onEditBookingClick,
+          modifier = Modifier
+            .size(32.dp)
+            .testTag("edit_booking_btn_${group.groupKey}")
+        ) {
+          Icon(
+            imageVector = Icons.Default.Edit,
+            contentDescription = "Edit Booking",
+            tint = Color(0xFFD97706),
+            modifier = Modifier.size(19.dp)
+          )
+        }
+
+        Spacer(modifier = Modifier.width(2.dp))
 
         // Delete Booking Button (🗑️)
         IconButton(
@@ -535,7 +593,7 @@ private fun GroupedBookedCard(
 
       Spacer(modifier = Modifier.height(10.dp))
 
-      // 2. Date Chips Section: [ 24-Dec-2026 ] [ 25-Dec-2026 ] ... (કુલ X દિવસ)
+      // 2. Date Chips Section: [ 24-Dec-2026 ] [ 25-Dec-2026 ] ... (कुल X दिन)
       Column(
         modifier = Modifier
           .fillMaxWidth()
@@ -548,14 +606,14 @@ private fun GroupedBookedCard(
           verticalAlignment = Alignment.CenterVertically
         ) {
           Text(
-            text = if (isGujarati) "📅 તારીખો:" else "📅 Dates:",
+            text = if (isGujarati) "📅 तारीखें:" else "📅 Dates:",
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF991B1B)
           )
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = if (isGujarati) "(કુલ ${group.dates.size} દિવસ)" else "(Total ${group.dates.size} Days)",
+            text = if (isGujarati) "(कुल ${group.dates.size} दिन)" else "(Total ${group.dates.size} Days)",
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color(0xFFDC2626)
@@ -603,6 +661,44 @@ private fun GroupedBookedCard(
             }
           }
         }
+
+        // Date-wise work breakdown list (e.g. • 12-Nov: Traditional Video)
+        Column(
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp),
+          verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+          group.dates.forEach { dateEntity ->
+            val formatted = StringsHelper.formatDateChip(dateEntity.dateKey)
+            val work = dateEntity.eventType.ifBlank { group.eventType.ifBlank { if (isGujarati) "फ़ोटोग्राफ़ी / वीडियो" else "Shoot" } }
+            val loc = if (dateEntity.location.isNotBlank()) " • 📍 ${dateEntity.location}" else ""
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color.White.copy(alpha = 0.95f))
+                .border(0.5.dp, Color(0xFFFECACA), RoundedCornerShape(6.dp))
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+              Text(
+                text = "• $formatted: ",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF991B1B)
+              )
+              Text(
+                text = "$work$loc",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1E293B),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+              )
+            }
+          }
+        }
       }
 
       Spacer(modifier = Modifier.height(8.dp))
@@ -610,7 +706,7 @@ private fun GroupedBookedCard(
       // Extra shoot details if present
       if (group.bookingSourceStudio.isNotBlank()) {
         Text(
-          text = "🏢 ${if (isGujarati) "હાયર કર્તા / સ્ટુડિયો:" else "Hired By Studio:"} ${group.bookingSourceStudio}",
+          text = "🏢 ${if (isGujarati) "हायर कर्ता / स्टूडियो:" else "Hired By Studio:"} ${group.bookingSourceStudio}",
           fontSize = 11.sp,
           fontWeight = FontWeight.Medium,
           color = Color(0xFF1E293B)
@@ -619,7 +715,7 @@ private fun GroupedBookedCard(
 
       if (group.gearRequired.isNotBlank()) {
         Text(
-          text = "🎥 ${if (isGujarati) "કેમેરા / ગિયર:" else "Gear:"} ${group.gearRequired}",
+          text = "🎥 ${if (isGujarati) "कैमरा / गियर:" else "Gear:"} ${group.gearRequired}",
           fontSize = 11.sp,
           color = Color(0xFF475569)
         )
@@ -643,7 +739,7 @@ private fun GroupedBookedCard(
         Column(modifier = Modifier.weight(1f)) {
           Text(
             text = if (isGujarati)
-              "એડવાન્સ: ₹${group.totalAdvance.toInt()} • બાકી: ₹${if (balance > 0) balance.toInt() else 0}"
+              "एडवांस: ₹${group.totalAdvance.toInt()} • शेष: ₹${if (balance > 0) balance.toInt() else 0}"
             else
               "Advance: ₹${group.totalAdvance.toInt()} • Bal: ₹${if (balance > 0) balance.toInt() else 0}",
             fontSize = 11.sp,
@@ -652,7 +748,7 @@ private fun GroupedBookedCard(
           )
           if (group.totalPackageAmount > 0) {
             Text(
-              text = if (isGujarati) "કુલ પેકેજ: ₹${group.totalPackageAmount.toInt()}" else "Total Package: ₹${group.totalPackageAmount.toInt()}",
+              text = if (isGujarati) "कुल पैकेज: ₹${group.totalPackageAmount.toInt()}" else "Total Package: ₹${group.totalPackageAmount.toInt()}",
               fontSize = 10.sp,
               color = Color(0xFF64748B)
             )
@@ -671,7 +767,7 @@ private fun GroupedBookedCard(
           ) {
             Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(12.dp))
             Spacer(modifier = Modifier.width(3.dp))
-            Text(text = if (isGujarati) "કોલ" else "Call", fontSize = 10.sp)
+            Text(text = if (isGujarati) "कॉल" else "Call", fontSize = 10.sp)
           }
 
           Spacer(modifier = Modifier.width(6.dp))
@@ -692,29 +788,58 @@ private fun GroupedBookedCard(
 
       Spacer(modifier = Modifier.height(10.dp))
 
-      // 4. View Details Button (સંપૂર્ણ વિગત જુઓ 👁️)
-      Button(
-        onClick = onViewDetailsClick,
-        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier
-          .fillMaxWidth()
-          .height(36.dp)
-          .testTag("view_details_btn_${group.groupKey}")
+      // 4. Action Buttons: View Details & Edit Details
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
       ) {
-        Icon(
-          imageVector = Icons.Default.EventNote,
-          contentDescription = null,
-          tint = Color(0xFFFBBF24),
-          modifier = Modifier.size(16.dp)
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(
-          text = if (isGujarati) "સંપૂર્ણ વિગત જુઓ 👁️" else "View Booking Details 👁️",
-          color = Color.White,
-          fontWeight = FontWeight.Bold,
-          fontSize = 12.sp
-        )
+        Button(
+          onClick = onViewDetailsClick,
+          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+          shape = RoundedCornerShape(8.dp),
+          modifier = Modifier
+            .weight(1f)
+            .height(38.dp)
+            .testTag("view_details_btn_${group.groupKey}")
+        ) {
+          Icon(
+            imageVector = Icons.Default.EventNote,
+            contentDescription = null,
+            tint = Color(0xFFFBBF24),
+            modifier = Modifier.size(15.dp)
+          )
+          Spacer(modifier = Modifier.width(4.dp))
+          Text(
+            text = if (isGujarati) "विवरण देखें 👁️" else "View Details 👁️",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.5.sp
+          )
+        }
+
+        Button(
+          onClick = onEditBookingClick,
+          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+          shape = RoundedCornerShape(8.dp),
+          modifier = Modifier
+            .weight(1f)
+            .height(38.dp)
+            .testTag("edit_details_btn_${group.groupKey}")
+        ) {
+          Icon(
+            imageVector = Icons.Default.Edit,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(15.dp)
+          )
+          Spacer(modifier = Modifier.width(4.dp))
+          Text(
+            text = if (isGujarati) "विवरण संपादित करें ✏️" else "Edit Details ✏️",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.5.sp
+          )
+        }
       }
     }
   }
@@ -725,7 +850,8 @@ private fun GroupedBookedCard(
 fun BookingDetailDialog(
   booking: GroupedClientBooking,
   isGujarati: Boolean,
-  onDismiss: () -> Unit
+  onDismiss: () -> Unit,
+  onEditClick: () -> Unit
 ) {
   val context = LocalContext.current
   val balance = (booking.totalPackageAmount - booking.totalAdvance).coerceAtLeast(0.0)
@@ -752,7 +878,7 @@ fun BookingDetailDialog(
     title = {
       Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Text(
-          text = booking.clientName.ifBlank { if (isGujarati) "ક્લાયન્ટ બુકિંગ" else "Client Booking" },
+          text = booking.clientName.ifBlank { if (isGujarati) "क्लाइंट बुकिंग" else "Client Booking" },
           fontSize = 18.sp,
           fontWeight = FontWeight.Bold,
           color = MaterialTheme.colorScheme.onSurface
@@ -788,7 +914,7 @@ fun BookingDetailDialog(
               verticalAlignment = Alignment.CenterVertically
             ) {
               Text(
-                text = if (isGujarati) "💰 કુલ પેકેજ રકમ:" else "💰 Total Package:",
+                text = if (isGujarati) "💰 कुल पैकेज राशि:" else "💰 Total Package:",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF0F172A)
@@ -806,7 +932,7 @@ fun BookingDetailDialog(
               horizontalArrangement = Arrangement.SpaceBetween
             ) {
               Text(
-                text = if (isGujarati) "🟢 એડવાન્સ મળેલ:" else "🟢 Advance Paid:",
+                text = if (isGujarati) "🟢 एडवांस प्राप्त:" else "🟢 Advance Paid:",
                 fontSize = 12.sp,
                 color = Color(0xFF475569)
               )
@@ -822,7 +948,7 @@ fun BookingDetailDialog(
               horizontalArrangement = Arrangement.SpaceBetween
             ) {
               Text(
-                text = if (isGujarati) "⏳ બાકી રકમ (Balance):" else "⏳ Remaining Balance:",
+                text = if (isGujarati) "⏳ शेष राशि (Balance):" else "⏳ Remaining Balance:",
                 fontSize = 12.sp,
                 color = Color(0xFF475569)
               )
@@ -845,7 +971,7 @@ fun BookingDetailDialog(
         ) {
           Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-              text = if (isGujarati) "📅 કઈ તારીખે શું કામ કરવાનું છે:" else "📅 Day-wise Shoot Services:",
+              text = if (isGujarati) "📅 किस तारीख को क्या काम करना है:" else "📅 Day-wise Shoot Services:",
               fontSize = 13.sp,
               fontWeight = FontWeight.Bold,
               color = Color(0xFF991B1B)
@@ -853,15 +979,16 @@ fun BookingDetailDialog(
 
             booking.dates.forEach { dateEntity ->
               val formattedDate = StringsHelper.formatDateChip(dateEntity.dateKey)
-              // Extract service line for this date from customNote if available
               val noteLines = booking.customNote.lines()
-              val matchingNoteLine = noteLines.find { it.contains(dateEntity.dateKey) }
-              val serviceTitle = if (!matchingNoteLine.isNullOrBlank()) {
-                matchingNoteLine.replace("•", "").trim()
-              } else if (dateEntity.eventType.isNotBlank()) {
-                dateEntity.eventType
+              val serviceTitle = if (dateEntity.eventType.isNotBlank()) {
+                dateEntity.eventType + if (dateEntity.location.isNotBlank()) " (📍 ${dateEntity.location})" else ""
               } else {
-                booking.eventType.ifBlank { "📸 Shoot" }
+                val matchingNoteLine = noteLines.find { it.contains(dateEntity.dateKey) }
+                if (!matchingNoteLine.isNullOrBlank()) {
+                  matchingNoteLine.replace("•", "").trim()
+                } else {
+                  booking.eventType.ifBlank { "📸 Shoot" }
+                }
               }
 
               Row(
@@ -908,7 +1035,7 @@ fun BookingDetailDialog(
               Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(18.dp))
               Spacer(modifier = Modifier.width(6.dp))
               Text(
-                text = "${if (isGujarati) "સ્થળ / વેન્યુ: " else "Location: "}${booking.location}",
+                text = "${if (isGujarati) "स्थान / वेन्यू: " else "Location: "}${booking.location}",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF334155)
@@ -919,7 +1046,7 @@ fun BookingDetailDialog(
 
         // 4. Notes (excluding availability tag)
         val cleanNotes = booking.customNote.lines()
-          .filter { !it.contains("તારીખ") && !it.contains("બુક થયેલ છે") && !it.contains("ખાલી છે") && !it.startsWith("•") }
+          .filter { !it.contains("तारीख") && !it.contains("बुक") && !it.contains("खाली") && !it.startsWith("•") }
           .joinToString("\n").trim()
         if (cleanNotes.isNotBlank()) {
           Surface(
@@ -930,7 +1057,7 @@ fun BookingDetailDialog(
           ) {
             Column(modifier = Modifier.padding(10.dp)) {
               Text(
-                text = if (isGujarati) "📝 ક્લાયન્ટ વિશેષ નોંધ:" else "📝 Special Notes:",
+                text = if (isGujarati) "📝 क्लाइंट विशेष नोट:" else "📝 Special Notes:",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF92400E)
@@ -944,6 +1071,28 @@ fun BookingDetailDialog(
             }
           }
         }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Prominent Full-Width Edit Details Button
+        Button(
+          onClick = onEditClick,
+          colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+          shape = RoundedCornerShape(10.dp),
+          modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .testTag("edit_booking_prominent_dialog_btn")
+        ) {
+          Icon(Icons.Default.Edit, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+          Spacer(modifier = Modifier.width(8.dp))
+          Text(
+            text = if (isGujarati) "यह बुकिंग विवरण संपादित करें ✏️" else "Edit Booking Details ✏️",
+            fontSize = 13.5.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+          )
+        }
       }
     },
     confirmButton = {
@@ -952,8 +1101,22 @@ fun BookingDetailDialog(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
       ) {
-        if (booking.clientPhone.isNotBlank()) {
-          Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+          // Edit Details Button (संपादित करें ✏️)
+          Button(
+            onClick = onEditClick,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier
+              .height(34.dp)
+              .testTag("edit_booking_from_detail_btn")
+          ) {
+            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(13.dp))
+            Spacer(modifier = Modifier.width(3.dp))
+            Text(if (isGujarati) "संपादित करें ✏️" else "Edit ✏️", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+          }
+
+          if (booking.clientPhone.isNotBlank()) {
             Button(
               onClick = {
                 val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${booking.clientPhone}"))
@@ -965,7 +1128,7 @@ fun BookingDetailDialog(
             ) {
               Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(14.dp))
               Spacer(modifier = Modifier.width(3.dp))
-              Text(if (isGujarati) "કૉલ" else "Call", fontSize = 11.sp)
+              Text(if (isGujarati) "कॉल" else "Call", fontSize = 11.sp)
             }
 
             Button(
@@ -989,9 +1152,346 @@ fun BookingDetailDialog(
           shape = RoundedCornerShape(8.dp),
           modifier = Modifier.height(34.dp)
         ) {
-          Text(if (isGujarati) "બંધ કરો" else "Close", fontSize = 11.sp)
+          Text(if (isGujarati) "बंद करें" else "Close", fontSize = 11.sp)
         }
       }
     }
   )
 }
+
+class EditableBookingDate(
+  val originalKey: String,
+  initialKey: String,
+  initialWorkType: String,
+  initialLocation: String
+) {
+  var currentDateKey by mutableStateOf(initialKey)
+  var currentWorkType by mutableStateOf(initialWorkType)
+  var currentLocation by mutableStateOf(initialLocation)
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun EditBookingDialog(
+  booking: GroupedClientBooking,
+  isGujarati: Boolean,
+  onDismiss: () -> Unit,
+  onSave: (totalPkg: Double, advance: Double, assignments: List<DateWorkAssignment>, notes: String) -> Unit
+) {
+  val context = LocalContext.current
+
+  var totalAmountText by remember {
+    mutableStateOf(if (booking.totalPackageAmount > 0) booking.totalPackageAmount.toInt().toString() else "")
+  }
+  var advanceAmountText by remember {
+    mutableStateOf(if (booking.totalAdvance > 0) booking.totalAdvance.toInt().toString() else "")
+  }
+  var customNote by remember { mutableStateOf(booking.customNote) }
+
+  // Date-wise editable state items
+  val editableDates = remember(booking) {
+    booking.dates.map { d ->
+      EditableBookingDate(
+        originalKey = d.dateKey,
+        initialKey = d.dateKey,
+        initialWorkType = d.eventType.ifBlank { booking.eventType },
+        initialLocation = d.location.ifBlank { booking.location }
+      )
+    }
+  }
+
+  val total = totalAmountText.toDoubleOrNull() ?: 0.0
+  val advance = advanceAmountText.toDoubleOrNull() ?: 0.0
+  val balance = (total - advance).coerceAtLeast(0.0)
+
+  val quickServices = listOf(
+    "Traditional Video",
+    "Traditional Photo",
+    "Candid Photography",
+    "Cinematic Video",
+    "Drone Shoot",
+    "Pre-Wedding",
+    "Haldi / Mehendi",
+    "Reception"
+  )
+
+  fun showDatePicker(item: EditableBookingDate) {
+    val parts = item.currentDateKey.split("-")
+    val y = parts.getOrNull(0)?.toIntOrNull() ?: 2026
+    val m = (parts.getOrNull(1)?.toIntOrNull() ?: 11) - 1
+    val d = parts.getOrNull(2)?.toIntOrNull() ?: 1
+    android.app.DatePickerDialog(
+      context,
+      { _, selectedYear, selectedMonth, selectedDay ->
+        val newKey = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay)
+        item.currentDateKey = newKey
+      },
+      y,
+      m,
+      d
+    ).show()
+  }
+
+  AlertDialog(
+    onDismissRequest = onDismiss,
+    modifier = Modifier.testTag("edit_booking_dialog"),
+    icon = {
+      Box(
+        modifier = Modifier
+          .size(46.dp)
+          .clip(CircleShape)
+          .background(Color(0xFFD97706)),
+        contentAlignment = Alignment.Center
+      ) {
+        Icon(
+          imageVector = Icons.Default.Edit,
+          contentDescription = null,
+          tint = Color.White,
+          modifier = Modifier.size(24.dp)
+        )
+      }
+    },
+    title = {
+      Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Text(
+          text = if (isGujarati) "बुकिंग विवरण और तारीख बदलें ✏️" else "Edit Booking & Dates ✏️",
+          fontSize = 17.sp,
+          fontWeight = FontWeight.Bold,
+          color = MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+          text = booking.clientName.ifBlank { if (isGujarati) "क्लाइंट" else "Client" } +
+            if (booking.clientPhone.isNotBlank()) " (${booking.clientPhone})" else "",
+          fontSize = 12.sp,
+          color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+      }
+    },
+    text = {
+      Column(
+        modifier = Modifier
+          .fillMaxWidth()
+          .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+      ) {
+        // 1. Total Package Amount
+        OutlinedTextField(
+          value = totalAmountText,
+          onValueChange = { totalAmountText = it.filter { ch -> ch.isDigit() } },
+          label = { Text(if (isGujarati) "कुल पैकेज राशि (₹)" else "Total Package (₹)") },
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+          singleLine = true,
+          modifier = Modifier.fillMaxWidth().testTag("edit_total_package_input")
+        )
+
+        // 2. Advance Amount
+        OutlinedTextField(
+          value = advanceAmountText,
+          onValueChange = { advanceAmountText = it.filter { ch -> ch.isDigit() } },
+          label = { Text(if (isGujarati) "एडवांस जमा राशि (₹)" else "Advance Paid (₹)") },
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+          singleLine = true,
+          modifier = Modifier.fillMaxWidth().testTag("edit_advance_input")
+        )
+
+        // Live Balance Indicator
+        Surface(
+          shape = RoundedCornerShape(8.dp),
+          color = if (balance > 0) Color(0xFFFEF2F2) else Color(0xFFF0FDF4),
+          border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (balance > 0) Color(0xFFFCA5A5) else Color(0xFF86EFAC)
+          ),
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .padding(horizontal = 10.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Text(
+              text = if (isGujarati) "शेष राशि (Balance):" else "Remaining Balance:",
+              fontSize = 11.sp,
+              fontWeight = FontWeight.SemiBold,
+              color = if (balance > 0) Color(0xFF991B1B) else Color(0xFF166534)
+            )
+            Text(
+              text = "₹${balance.toInt()}",
+              fontSize = 13.sp,
+              fontWeight = FontWeight.ExtraBold,
+              color = if (balance > 0) Color(0xFFDC2626) else Color(0xFF15803D)
+            )
+          }
+        }
+
+        // Section Divider Header: Date & Work Assignment
+        Column(modifier = Modifier.fillMaxWidth()) {
+          Text(
+            text = if (isGujarati) "📅 तारीख और काम का विवरण (Date & Work):" else "📅 Date & Work Breakdown:",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF991B1B)
+          )
+          Text(
+            text = if (isGujarati) "तारीख बदलने या प्रत्येक तारीख का काम सेट करने के लिए नीचे देखें:" else "Assign work per date or change booking dates below:",
+            fontSize = 10.sp,
+            color = Color(0xFF64748B)
+          )
+        }
+
+        // Each date card
+        editableDates.forEachIndexed { index, dateItem ->
+          Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = Color(0xFFFFFBEB),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFDE68A)),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Column(
+              modifier = Modifier.padding(10.dp),
+              verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+              // Date Row with Change Date button
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                Column {
+                  Text(
+                    text = "📅 ${StringsHelper.formatDateChip(dateItem.currentDateKey)}",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFF92400E)
+                  )
+                  if (dateItem.currentDateKey != dateItem.originalKey) {
+                    Text(
+                      text = if (isGujarati) "🔄 नई तारीख (पुरानी: ${dateItem.originalKey})" else "🔄 Changed from ${dateItem.originalKey}",
+                      fontSize = 10.sp,
+                      fontWeight = FontWeight.Bold,
+                      color = Color(0xFFB45309)
+                    )
+                  }
+                }
+
+                Button(
+                  onClick = { showDatePicker(dateItem) },
+                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                  shape = RoundedCornerShape(6.dp),
+                  contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                  modifier = Modifier.height(32.dp).testTag("change_date_btn_${dateItem.originalKey}")
+                ) {
+                  Icon(Icons.Default.CalendarToday, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                  Spacer(modifier = Modifier.width(4.dp))
+                  Text(
+                    text = if (isGujarati) "तारीख बदलें" else "Change Date",
+                    fontSize = 10.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                  )
+                }
+              }
+
+              // Work / Service Type Header
+              Text(
+                text = if (isGujarati) "🎥 इस तारीख को क्या काम करना है? (Work):" else "🎥 Service / Work for this date:",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF78350F)
+              )
+
+              // Quick Service Chips
+              FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth()
+              ) {
+                quickServices.forEach { service ->
+                  val isSelected = dateItem.currentWorkType.contains(service, ignoreCase = true)
+                  Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = if (isSelected) Color(0xFFD97706) else Color.White,
+                    border = androidx.compose.foundation.BorderStroke(
+                      0.5.dp,
+                      if (isSelected) Color(0xFFB45309) else Color(0xFFCBD5E1)
+                    ),
+                    modifier = Modifier.clickable {
+                      dateItem.currentWorkType = service
+                    }
+                  ) {
+                    Text(
+                      text = service,
+                      fontSize = 10.sp,
+                      fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                      color = if (isSelected) Color.White else Color(0xFF334155),
+                      modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                    )
+                  }
+                }
+              }
+
+              // Work Type Text Field
+              OutlinedTextField(
+                value = dateItem.currentWorkType,
+                onValueChange = { dateItem.currentWorkType = it },
+                label = { Text(if (isGujarati) "काम का विवरण (जैसे Traditional Video)" else "Service (e.g. Traditional Video)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().testTag("edit_date_work_${dateItem.originalKey}")
+              )
+
+              // Location / Venue for this Date
+              OutlinedTextField(
+                value = dateItem.currentLocation,
+                onValueChange = { dateItem.currentLocation = it },
+                label = { Text(if (isGujarati) "स्थान / वेन्यू (Location / Venue)" else "Location / Venue") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth().testTag("edit_date_loc_${dateItem.originalKey}")
+              )
+            }
+          }
+        }
+
+        // 4. Notes / Service Breakdown
+        OutlinedTextField(
+          value = customNote,
+          onValueChange = { customNote = it },
+          label = { Text(if (isGujarati) "विशेष नोट / सामान्य विवरण" else "Notes / Overall Details") },
+          minLines = 2,
+          maxLines = 5,
+          modifier = Modifier.fillMaxWidth().testTag("edit_notes_input")
+        )
+      }
+    },
+    confirmButton = {
+      Button(
+        onClick = {
+          val assignments = editableDates.map {
+            DateWorkAssignment(
+              originalDateKey = it.originalKey,
+              newDateKey = it.currentDateKey,
+              eventType = it.currentWorkType.trim(),
+              location = it.currentLocation.trim()
+            )
+          }
+          onSave(total, advance, assignments, customNote.trim())
+        },
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.testTag("save_edit_booking_btn")
+      ) {
+        Text(if (isGujarati) "सेव करें 💾" else "Save Changes 💾", color = Color.White, fontWeight = FontWeight.Bold)
+      }
+    },
+    dismissButton = {
+      OutlinedButton(
+        onClick = onDismiss,
+        modifier = Modifier.testTag("cancel_edit_booking_btn")
+      ) {
+        Text(if (isGujarati) "रद्द करें" else "Cancel")
+      }
+    }
+  )
+}
+

@@ -277,7 +277,7 @@ fun AppOpenAdDialog(
         // Ad Description
         Text(
           text = if (isHindi)
-            "Google AdMob टेस्ट विज्ञापन। ऊपर '✕' અથવા નીચે બટન દબાવી સીધા એપમાં જાઓ."
+            "Google AdMob टेस्ट विज्ञापन। ऊपर '✕' या नीचे बटन दबाकर सीधे ऐप में जाएं।"
           else
             "Google AdMob Test Launch Ad. Tap '✕' or the button below to enter the app.",
           fontSize = 12.sp,
@@ -309,7 +309,7 @@ fun AppOpenAdDialog(
           )
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = if (isHindi) "✕ विज्ञापन बंद करें અને એપમાં જાઓ" else "✕ Close Ad & Enter App",
+            text = if (isHindi) "✕ विज्ञापन बंद करें और ऐप में जाएं" else "✕ Close Ad & Enter App",
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White

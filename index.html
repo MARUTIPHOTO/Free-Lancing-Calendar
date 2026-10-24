@@ -33,7 +33,7 @@
     <!-- 0. STICKY TOP CONFIRMATION TOAST (Guaranteed 100% Visible On Any Screen) -->
     <div id="topSubmitDoneToast" style="display:none; position:fixed; top:12px; left:12px; right:12px; z-index:999999; background:#059669; color:#ffffff; padding:16px; border-radius:16px; box-shadow:0 12px 30px rgba(0,0,0,0.4); text-align:center; font-weight:bold; border: 2px solid #ffffff;">
         <div style="font-size:22px; font-weight:800; margin-bottom:4px;">🎉 Submit Done ✅</div>
-        <div style="font-size:14px; font-weight:600; opacity:0.95;">તમારી બુકિંગ ઇન્ક્વાયરી સફળતાપૂર્વક સબમિટ થઈ ગઈ છે!</div>
+        <div style="font-size:14px; font-weight:600; opacity:0.95;">आपकी बुकिंग पूछताछ सफलतापूर्वक सबमिट हो गई है!</div>
     </div>
 
     <!-- 1. Studio Branding Header Card (Matching Android ClientPortalScreen) -->
@@ -65,7 +65,7 @@
             <!-- Sub-Banner -->
             <div class="mt-3 bg-slate-800/90 border border-slate-700 rounded-xl px-3 py-2 text-center">
                 <p id="portalSubBannerText" class="text-xs font-semibold text-amber-200">
-                    🌟 ક્લાયન્ટ બુકિંગ પોર્ટલ • તારીખ અને શૂટિંગ સર્વિસ પસંદ કરો (Candid, Traditional, Video)
+                    🌟 क्लाइंट बुकिंग पोर्टल • तारीख और शूटिंग सर्विस चुनें (Candid, Traditional, Video)
                 </p>
             </div>
         </div>
@@ -80,7 +80,7 @@
             <div class="flex items-center gap-2 mb-3">
                 <i data-lucide="calendar" class="w-4 h-4 text-amber-600"></i>
                 <h2 id="section1Title" class="text-sm font-bold text-slate-900">
-                    ૧. કેલેન્ડરમાંથી તારીખો પસંદ કરો (ખાલી 🟢 તારીખ પર ટેપ કરો):
+                    १. कैलेंडर से तारीखें चुनें (खाली 🟢 तारीख पर टैप करें):
                 </h2>
             </div>
 
@@ -97,7 +97,7 @@
                 <div class="flex items-center gap-1">
                     <button onclick="goToToday()" class="p-1.5 hover:bg-white text-amber-600 rounded-lg transition-all text-xs font-bold flex items-center gap-1" title="Go to Today">
                         <i data-lucide="calendar-days" class="w-4 h-4"></i>
-                        <span id="todayButtonText" class="hidden sm:inline">આજ (Today)</span>
+                        <span id="todayButtonText" class="hidden sm:inline">आज (Today)</span>
                     </button>
                     <button onclick="changeMonth(1)" class="p-1.5 hover:bg-white text-slate-700 rounded-lg transition-all" title="Next Month">
                         <i data-lucide="chevron-right" class="w-5 h-5"></i>
@@ -109,27 +109,27 @@
             <div class="flex items-center justify-around text-xs font-semibold bg-slate-50 border border-slate-100 rounded-xl py-2 px-1 mb-3">
                 <div class="flex items-center gap-1.5 text-emerald-700">
                     <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    <span id="legendFree">ઉપલબ્ધ (Open)</span>
+                    <span id="legendFree">उपलब्ध (Open)</span>
                 </div>
                 <div class="flex items-center gap-1.5 text-rose-600">
                     <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                    <span id="legendBooked">બુક થયેલ 🔒</span>
+                    <span id="legendBooked">बुक है 🔒</span>
                 </div>
                 <div class="flex items-center gap-1.5 text-amber-700">
                     <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                    <span id="legendSelected">પસંદ કરેલ (Selected)</span>
+                    <span id="legendSelected">चयनित (Selected)</span>
                 </div>
             </div>
 
             <!-- Weekday Headers (7 Columns) -->
             <div class="calendar-grid text-center font-bold text-xs text-slate-500 py-1 border-b border-slate-100 mb-1">
-                <div class="text-rose-600" id="wdSun">રવિ</div>
-                <div id="wdMon">સોમ</div>
-                <div id="wdTue">મંગળ</div>
-                <div id="wdWed">બુધ</div>
-                <div id="wdThu">ગુરુ</div>
-                <div id="wdFri">શુક્ર</div>
-                <div id="wdSat">શનિ</div>
+                <div class="text-rose-600" id="wdSun">रवि</div>
+                <div id="wdMon">सोम</div>
+                <div id="wdTue">मंगल</div>
+                <div id="wdWed">बुध</div>
+                <div id="wdThu">गुरु</div>
+                <div id="wdFri">शुक्र</div>
+                <div id="wdSat">शनि</div>
             </div>
 
             <!-- Calendar Days Grid -->
@@ -143,10 +143,10 @@
                     <div class="flex items-center justify-between">
                         <span id="selectedServicesHeading" class="text-xs font-bold text-amber-950 uppercase flex items-center gap-1">
                             <i data-lucide="check-circle" class="w-3.5 h-3.5 text-amber-600"></i>
-                            પસંદ કરેલી તારીખો અને સર્વિસ (0 દિવસ):
+                            चुनी गई तारीखें और सर्विस (0 दिन):
                         </span>
                         <button onclick="clearAllSelections()" class="text-xs font-bold text-rose-600 hover:text-rose-800">
-                            બધા સાફ કરો (Clear)
+                            सभी साफ़ करें (Clear)
                         </button>
                     </div>
 
@@ -159,7 +159,7 @@
                     <div class="bg-slate-900 text-white rounded-xl p-3 flex items-center justify-between shadow-sm">
                         <div class="flex items-center gap-1.5 text-xs text-slate-300">
                             <i data-lucide="receipt" class="w-4 h-4 text-amber-400"></i>
-                            <span id="totalEstimateLabel">કુલ અંદાજિત બજેટ (Total Estimate):</span>
+                            <span id="totalEstimateLabel">कुल अनुमानित बजट (Total Estimate):</span>
                         </div>
                         <span id="totalEstimateAmount" class="text-base font-bold text-amber-300">₹0</span>
                     </div>
@@ -168,7 +168,7 @@
 
             <!-- Empty Selection Helper Note -->
             <div id="emptySelectHelper" class="mt-3 bg-slate-50 rounded-xl p-2.5 text-center text-xs text-slate-500 border border-slate-100">
-                👆 કેલેન્ડરમાં ઉપલબ્ધ (🟢) તારીખ પર ક્લિક કરીને તારીખો અને શૂટિંગ સર્વિસ પસંદ કરો.
+                👆 कैलेंडर में उपलब्ध (🟢) तारीख पर क्लिक करके तारीखें और शूटिंग सर्विस चुनें।
             </div>
         </section>
 
@@ -177,7 +177,7 @@
             <div class="flex items-center gap-2 mb-3">
                 <i data-lucide="user-check" class="w-4 h-4 text-amber-600"></i>
                 <h2 id="section2Title" class="text-sm font-bold text-slate-900">
-                    ૨. તમારી વિગતો ભરો:
+                    २. अपना विवरण भरें:
                 </h2>
             </div>
 
@@ -185,61 +185,61 @@
                 <!-- Name -->
                 <div>
                     <label id="labelName" class="block text-xs font-bold text-slate-700 uppercase mb-1">
-                        તમારું નામ / ક્લાયન્ટનું નામ
+                        आपका नाम / क्लाइंट का नाम
                     </label>
                     <div class="relative">
                         <i data-lucide="user" class="w-4 h-4 text-amber-600 absolute left-3 top-3"></i>
-                        <input type="text" id="inputClientName" placeholder="દા.ત. Rajesh Patel" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
+                        <input type="text" id="inputClientName" placeholder="उदा. Rajesh Patel" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
                     </div>
                 </div>
 
                 <!-- Phone -->
                 <div>
                     <label id="labelPhone" class="block text-xs font-bold text-slate-700 uppercase mb-1">
-                        મોબાઈલ નંબર (WhatsApp)
+                        मोबाइल नंबर (WhatsApp)
                     </label>
                     <div class="relative">
                         <i data-lucide="phone" class="w-4 h-4 text-emerald-600 absolute left-3 top-3"></i>
-                        <input type="tel" id="inputClientPhone" placeholder="દા.ત. 9876543210" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
+                        <input type="tel" id="inputClientPhone" placeholder="उदा. 9876543210" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
                     </div>
                 </div>
 
                 <!-- Venue / Location (Optional) -->
                 <div>
                     <label id="labelLocation" class="block text-xs font-bold text-slate-700 uppercase mb-1">
-                        સ્થળ / વેન્યુ / શહેર (Location / City) (Optional)
+                        स्थान / वेन्यू / शहर (Location / City) (Optional)
                     </label>
                     <div class="relative">
                         <i data-lucide="map-pin" class="w-4 h-4 text-rose-500 absolute left-3 top-3"></i>
-                        <input type="text" id="inputClientLocation" placeholder="દા.ત. Shreeji Party Plot, Ahmedabad" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
+                        <input type="text" id="inputClientLocation" placeholder="उदा. Shreeji Party Plot, Ahmedabad" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all">
                     </div>
                 </div>
 
                 <!-- Notes / Special Requirements -->
                 <div>
                     <label id="labelNotes" class="block text-xs font-bold text-slate-700 uppercase mb-1">
-                        શૂટિંગ વિગત / વધારાની નોટ્સ (Optional)
+                        शूटिंग विवरण / अतिरिक्त नोट्स (Optional)
                     </label>
                     <div class="relative">
                         <i data-lucide="file-text" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
-                        <textarea id="inputClientNotes" rows="2" placeholder="દા.ત. 1 Album + 1 Pen Drive, Drone Shoot for Evening Sangeet..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"></textarea>
+                        <textarea id="inputClientNotes" rows="2" placeholder="उदा. 1 Album + 1 Pen Drive, Drone Shoot for Evening Sangeet..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all"></textarea>
                     </div>
                 </div>
 
                 <!-- Submit Button -->
                 <button type="button" onclick="handleInquirySubmit(event)" id="submitButton" class="w-full mt-2 py-3 px-4 bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer">
                     <i data-lucide="send" class="w-4 h-4 text-amber-400"></i>
-                    <span id="submitButtonText">બુકિંગ ઇન્ક્વાયરી મોકલો 🚀</span>
+                    <span id="submitButtonText">बुकिंग पूछताछ भेजें 🚀</span>
                 </button>
 
                 <!-- Prominent Submit Done Confirmation Banner -->
                 <div id="submitDoneBanner" class="hidden mt-3 p-4 bg-emerald-50 border-2 border-emerald-500 rounded-2xl text-center shadow-lg animate-bounce">
                     <div class="flex items-center justify-center gap-2 text-emerald-800 font-extrabold text-base">
                         <span>✅</span>
-                        <span>Submit Done! (સફળતાપૂર્વક સબમિટ થઈ ગયું)</span>
+                        <span>Submit Done! (सफलतापूर्वक सबमिट हो गया)</span>
                     </div>
                     <p class="text-xs text-emerald-700 mt-1" id="submitDoneBannerSub">
-                        તમારી બુકિંગ ઇન્ક્વાયરી સફળતાપૂર્વક પહોંચી ગઈ છે અને એપમાં નોટિફિકેશન મોકલાઈ ગયું છે.
+                        आपकी बुकिंग पूछताछ सफलतापूर्वक पहुँच गई है और ऐप में नोटिफिकेशन भेज दिया गया है।
                     </p>
                 </div>
             </form>
@@ -254,26 +254,26 @@
             </div>
             <div>
                 <h3 id="modalSuccessTitle" class="text-lg font-bold text-slate-900">
-                    ઇન્ક્વાયરી સફળતાપૂર્વક મોકલાઈ ગઈ! 🎉
+                    पूछताछ सफलतापूर्वक भेज दी गई! 🎉
                 </h3>
                 <p id="modalSuccessDesc" class="text-xs text-slate-600 mt-1">
-                    તમારી બુકિંગ ઇન્ક્વાયરી Maruti Photo & Films ને પહોંચી ગઈ છે. અમે ટૂંક સમયમાં તમારો સંપર્ક કરીશું.
+                    आपकी बुकिंग पूछताछ Maruti Photo & Films को पहुँच गई है। हम जल्द ही आपसे संपर्क करेंगे।
                 </p>
             </div>
 
             <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-left text-xs space-y-1">
-                <p class="font-bold text-slate-800" id="modalSummaryClient">ક્લાયન્ટ: -</p>
-                <p class="text-slate-600" id="modalSummaryDates">તારીખો: -</p>
-                <p class="text-slate-600" id="modalSummaryTotal">અંદાજિત બજેટ: ₹0</p>
+                <p class="font-bold text-slate-800" id="modalSummaryClient">क्लाइंट: -</p>
+                <p class="text-slate-600" id="modalSummaryDates">तारीखें: -</p>
+                <p class="text-slate-600" id="modalSummaryTotal">अनुमानित बजट: ₹0</p>
             </div>
 
             <div class="flex items-center gap-2 pt-2">
                 <button onclick="closeSuccessModal()" class="flex-1 py-2.5 px-3 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-bold">
-                    બંધ કરો (Close)
+                    बंद करें (Close)
                 </button>
                 <button onclick="openDirectWhatsApp()" class="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow">
                     <i data-lucide="message-circle" class="w-4 h-4"></i>
-                    <span>WhatsApp ખોલો</span>
+                    <span>WhatsApp खोलें</span>
                 </button>
             </div>
         </div>
@@ -285,12 +285,12 @@
         // SERVICES & PRICING DEFINITIONS (1:1 with Android App StringsHelper)
         // -------------------------------------------------------------
         const SERVICES = [
-            { id: 'candid_photo', nameGu: 'ક્રેન્ડિડ ફોટોગ્રાફી', nameEn: 'Candid Photography', icon: '📸', rate: 10000 },
-            { id: 'traditional_photo', nameGu: 'ટ્રેડિશનલ ફોટોગ્રાફી', nameEn: 'Traditional Photography', icon: '📷', rate: 7000 },
-            { id: 'cinematic_video', nameGu: 'સિનેમેટિક વિડીયોગ્રાફી', nameEn: 'Cinematic Videography', icon: '🎥', rate: 12000 },
-            { id: 'traditional_video', nameGu: 'ટ્રેડિશનલ વિડીયો', nameEn: 'Traditional Videography', icon: '📹', rate: 7000 },
-            { id: 'drone', nameGu: 'ડ્રોન પાયલોટ / શૂટ', nameEn: 'Drone Shoot', icon: '🚁', rate: 8000 },
-            { id: 'pre_wedding', nameGu: 'પ્રી-વેડિંગ શૂટ', nameEn: 'Pre-Wedding Shoot', icon: '💍', rate: 15000 }
+            { id: 'candid_photo', nameHi: 'कैंडिड फ़ोटोग्राफ़ी', nameEn: 'Candid Photography', icon: '📸', rate: 10000 },
+            { id: 'traditional_photo', nameHi: 'ट्रेडिशनल फ़ोटोग्राफ़ी', nameEn: 'Traditional Photography', icon: '📷', rate: 7000 },
+            { id: 'cinematic_video', nameHi: 'सिनेमैटिक वीडियोग्राफ़ी', nameEn: 'Cinematic Videography', icon: '🎥', rate: 12000 },
+            { id: 'traditional_video', nameHi: 'ट्रेडिशनल वीडियो', nameEn: 'Traditional Videography', icon: '📹', rate: 7000 },
+            { id: 'drone', nameHi: 'ड्रोन पायलट / शूट', nameEn: 'Drone Shoot', icon: '🚁', rate: 8000 },
+            { id: 'pre_wedding', nameHi: 'प्री-वेडिंग शूट', nameEn: 'Pre-Wedding Shoot', icon: '💍', rate: 15000 }
         ];
 
         // Studio Info
@@ -311,16 +311,23 @@
         let lastWhatsAppMessage = "";
 
         // Month Names
-        const monthsGu = ["જાન્યુઆરી", "ફેબ્રુઆરી", "માર્ચ", "એપ્રિલ", "મે", "જૂન", "જુલાઈ", "ઓગસ્ટ", "સપ્ટેમ્બર", "ઓક્ટોબર", "નવેમ્બર", "ડિસેમ્બર"];
+        const monthsHi = ["जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून", "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"];
         const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-        // Initialize on load
-        window.addEventListener('DOMContentLoaded', () => {
-            parseUrlParameters();
-            renderCalendar();
-            updateUIStrings();
-            lucide.createIcons();
-        });
+        // Initialize on load with robust readyState check
+        function initApp() {
+            try { parseUrlParameters(); } catch (e) { console.warn(e); }
+            try { renderCalendar(); } catch (e) { console.error("renderCalendar error:", e); }
+            try { updateUIStrings(); } catch (e) { console.warn(e); }
+            try { renderSelectedServicesList(); } catch (e) { console.warn(e); }
+            try { if (window.lucide) lucide.createIcons(); } catch(e){}
+        }
+
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
         // Parse query params (e.g. ?dates=2026-11-15,2026-11-16&studio=Maruti)
         function parseUrlParameters() {
@@ -368,33 +375,33 @@
         }
 
         function updateUIStrings() {
-            document.getElementById('langButtonText').innerText = isGujarati ? "English" : "ગુજરાતી";
+            document.getElementById('langButtonText').innerText = isGujarati ? "English" : "हिन्दी";
             document.getElementById('portalSubBannerText').innerText = isGujarati
-                ? "🌟 ક્લાયન્ટ બુકિંગ પોર્ટલ • તારીખ અને શૂટિંગ સર્વિસ પસંદ કરો (Candid, Traditional, Video)"
+                ? "🌟 क्लाइंट बुकिंग पोर्टल • तारीख और शूटिंग सर्विस चुनें (Candid, Traditional, Video)"
                 : "🌟 Client Booking Portal • Pick Dates & Services (Candid, Traditional, Video)";
             
             document.getElementById('section1Title').innerText = isGujarati
-                ? "૧. કેલેન્ડરમાંથી તારીખો પસંદ કરો (ખાલી 🟢 તારીખ પર ટેપ કરો):"
+                ? "१. कैलेंडर से तारीखें चुनें (खाली 🟢 तारीख पर टैप करें):"
                 : "1. Select Dates from Calendar (Tap open 🟢 dates):";
 
-            document.getElementById('todayButtonText').innerText = isGujarati ? "આજ (Today)" : "Today";
-            document.getElementById('legendFree').innerText = isGujarati ? "ઉપલબ્ધ (Open)" : "Open (Free)";
-            document.getElementById('legendBooked').innerText = isGujarati ? "બુક થયેલ 🔒" : "Blocked 🔒";
-            document.getElementById('legendSelected').innerText = isGujarati ? "પસંદ કરેલ" : "Selected";
+            document.getElementById('todayButtonText').innerText = isGujarati ? "आज (Today)" : "Today";
+            document.getElementById('legendFree').innerText = isGujarati ? "उपलब्ध (Open)" : "Open (Free)";
+            document.getElementById('legendBooked').innerText = isGujarati ? "बुक है 🔒" : "Blocked 🔒";
+            document.getElementById('legendSelected').innerText = isGujarati ? "चयनित" : "Selected";
 
-            document.getElementById('wdSun').innerText = isGujarati ? "રવિ" : "Sun";
-            document.getElementById('wdMon').innerText = isGujarati ? "સોમ" : "Mon";
-            document.getElementById('wdTue').innerText = isGujarati ? "મંગળ" : "Tue";
-            document.getElementById('wdWed').innerText = isGujarati ? "બુધ" : "Wed";
-            document.getElementById('wdThu').innerText = isGujarati ? "ગુરુ" : "Thu";
-            document.getElementById('wdFri').innerText = isGujarati ? "શુક્ર" : "Fri";
-            document.getElementById('wdSat').innerText = isGujarati ? "શનિ" : "Sat";
+            document.getElementById('wdSun').innerText = isGujarati ? "रवि" : "Sun";
+            document.getElementById('wdMon').innerText = isGujarati ? "सोम" : "Mon";
+            document.getElementById('wdTue').innerText = isGujarati ? "मंगल" : "Tue";
+            document.getElementById('wdWed').innerText = isGujarati ? "बुध" : "Wed";
+            document.getElementById('wdThu').innerText = isGujarati ? "गुरु" : "Thu";
+            document.getElementById('wdFri').innerText = isGujarati ? "शुक्र" : "Fri";
+            document.getElementById('wdSat').innerText = isGujarati ? "शनि" : "Sat";
 
-            document.getElementById('section2Title').innerText = isGujarati ? "૨. તમારી વિગતો ભરો:" : "2. Enter Your Details:";
-            document.getElementById('labelName').innerText = isGujarati ? "તમારું નામ / ક્લાયન્ટનું નામ *" : "Your Name / Client Name *";
-            document.getElementById('labelPhone').innerText = isGujarati ? "મોબાઈલ નંબર (WhatsApp) *" : "Phone / WhatsApp Number *";
-            document.getElementById('labelLocation').innerText = isGujarati ? "સ્થળ / વેન્યુ / શહેર (Location / City) *" : "Venue / Location / City *";
-            document.getElementById('labelNotes').innerText = isGujarati ? "શૂટિંગ વિગત / વધારાની નોટ્સ (Optional)" : "Special Requirements / Notes (Optional)";
+            document.getElementById('section2Title').innerText = isGujarati ? "२. अपना विवरण भरें:" : "2. Enter Your Details:";
+            document.getElementById('labelName').innerText = isGujarati ? "आपका नाम / क्लाइंट का नाम *" : "Your Name / Client Name *";
+            document.getElementById('labelPhone').innerText = isGujarati ? "मोबाइल नंबर (WhatsApp) *" : "Phone / WhatsApp Number *";
+            document.getElementById('labelLocation').innerText = isGujarati ? "स्थान / वेन्यू / शहर (Location / City) *" : "Venue / Location / City *";
+            document.getElementById('labelNotes').innerText = isGujarati ? "शूटिंग विवरण / अतिरिक्त नोट्स (Optional)" : "Special Requirements / Notes (Optional)";
 
             updateSubmitButtonText();
             lucide.createIcons();
@@ -409,10 +416,10 @@
             const btn = document.getElementById('submitButtonText');
             if (!btn) return;
             if (count === 0) {
-                btn.innerText = isGujarati ? "તારીખ પસંદ કરો 🚀" : "Pick Dates 🚀";
+                btn.innerText = isGujarati ? "तारीख चुनें 🚀" : "Pick Dates 🚀";
             } else {
                 btn.innerText = isGujarati 
-                    ? `બુકિંગ ઇન્ક્વાયરી મોકલો (₹${total.toLocaleString('en-IN')} • ${count} દિવસ) 🚀`
+                    ? `बुकिंग पूछताछ भेजें (₹${total.toLocaleString('en-IN')} • ${count} दिन) 🚀`
                     : `Submit Inquiry (₹${total.toLocaleString('en-IN')} • ${count} Days) 🚀`;
             }
         }
@@ -429,7 +436,7 @@
 
         // Calendar Logic
         function renderCalendar() {
-            const monthText = isGujarati ? monthsGu[currentMonth] : monthsEn[currentMonth];
+            const monthText = isGujarati ? monthsHi[currentMonth] : monthsEn[currentMonth];
             document.getElementById('currentMonthYearText').innerText = `${monthText} ${currentYear}`;
 
             const grid = document.getElementById('calendarDaysGrid');
@@ -466,7 +473,7 @@
 
                 cell.onclick = () => {
                     if (isBooked) {
-                        alert(isGujarati ? "આ તારીખ પહેલેથી જ બુક થયેલી છે 🔒" : "This date is already booked / blocked 🔒");
+                        alert(isGujarati ? "यह तारीख पहले से ही बुक है 🔒" : "This date is already booked / blocked 🔒");
                         return;
                     }
                     if (selectedDatesMap[dateISO]) {
@@ -536,7 +543,7 @@
             list.innerHTML = '';
 
             document.getElementById('selectedServicesHeading').innerText = isGujarati
-                ? `પસંદ કરેલી તારીખો અને સર્વિસ (${dates.length} દિવસ):`
+                ? `चुनी गई तारीखें और सर्विस (${dates.length} दिन):`
                 : `Selected Dates & Services (${dates.length} Days):`;
 
             dates.forEach(dateKey => {
@@ -549,7 +556,7 @@
                 // Formatted date string
                 const dObj = new Date(dateKey);
                 const dayNum = dObj.getDate();
-                const mName = isGujarati ? monthsGu[dObj.getMonth()] : monthsEn[dObj.getMonth()];
+                const mName = isGujarati ? monthsHi[dObj.getMonth()] : monthsEn[dObj.getMonth()];
                 const dateDisplay = `${dayNum} ${mName} ${dObj.getFullYear()}`;
 
                 card.innerHTML = `
@@ -568,14 +575,14 @@
                     </div>
 
                     <div class="text-[11px] text-slate-500">
-                        ${isGujarati ? "આ દિવસ માટે સર્વિસ પસંદ કરો:" : "Select service for this day:"}
+                        ${isGujarati ? "इस दिन के लिए सर्विस चुनें:" : "Select service for this day:"}
                     </div>
 
                     <!-- Service Pills -->
                     <div class="flex flex-wrap gap-1.5 pt-1">
                         ${SERVICES.map(s => {
                             const isChosen = (s.id === currentServiceId);
-                            const sName = isGujarati ? s.nameGu : s.nameEn;
+                            const sName = isGujarati ? s.nameHi : s.nameEn;
                             return `
                                 <button type="button" onclick="setServiceForDate('${dateKey}', '${s.id}')" class="text-[11px] px-2.5 py-1 rounded-lg border font-medium transition-all ${
                                     isChosen ? 'bg-slate-900 border-slate-900 text-amber-300 font-bold shadow-sm' :
@@ -621,7 +628,7 @@
                 submitBtn.style.setProperty('color', '#ffffff', 'important');
                 submitBtn.style.setProperty('border', '2px solid #34d399', 'important');
                 submitBtn.className = "w-full mt-2 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer";
-                submitBtn.innerHTML = '<span style="font-size:20px;">✅</span> <span style="font-weight:800; font-size:15px; letter-spacing:0.3px;">Submit Done! (સફળતાપૂર્વક સબમિટ થઈ ગયું)</span>';
+                submitBtn.innerHTML = '<span style="font-size:20px;">✅</span> <span style="font-weight:800; font-size:15px; letter-spacing:0.3px;">Submit Done! (सफलतापूर्वक सबमिट हो गया)</span>';
             }
 
             // Also show top toast banner and confirmation card
@@ -653,7 +660,7 @@
 
             // Friendly auto-fallbacks so submission NEVER fails even if client taps button directly to test!
             if (!clientName) {
-                clientName = "Web Client (ઇન્ક્વાયરી)";
+                clientName = "Web Client (पूछताछ)";
                 if (nameInput) nameInput.value = clientName;
             }
             if (!clientPhone) {
@@ -699,28 +706,27 @@
             const breakdownLines = dates.map(d => {
                 const sId = selectedDatesMap[d];
                 const sObj = SERVICES.find(s => s.id === sId) || SERVICES[0];
-                const sName = isGujarati ? s.nameGu : s.nameEn;
+                const sName = isGujarati ? s.nameHi : s.nameEn;
                 return `• ${d}: ${sObj.icon} ${sName} (₹${sObj.rate.toLocaleString('en-IN')})`;
             }).join('\n');
 
             // Build pre-formatted WhatsApp Message
             lastWhatsAppMessage = 
-`🙏 *નવું શૂટિંગ બુકિંગ ઇન્ક્વાયરી*
+`🙏 *नई शूटिंग बुकिंग पूछताछ*
 📸 *${STUDIO_INFO.name}*
 
-👤 *ક્લાયન્ટ નામ:* ${clientName}
-📞 *મોબાઈલ નંબર:* ${clientPhone}
-📍 *સ્થળ / વેન્યુ:* ${clientLoc || 'Not Specified'}
+👤 *क्लाइंट नाम:* ${clientName}
+📞 *मोबाइल नंबर:* ${clientPhone}
+📍 *स्थान / वेन्यू:* ${clientLoc || 'Not Specified'}
 
-📅 *પસંદ કરેલી તારીખો અને સર્વિસ (${dates.length} દિવસ):*
+📅 *चुनी गई तारीखें और सर्विस (${dates.length} दिन):*
 ${breakdownLines}
 
-💰 *કુલ અંદાજિત બજેટ:* ₹${total.toLocaleString('en-IN')}
-${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
-કૃપા કરીને આ તારીખ કન્ફર્મ કરવા જણાવશો. આભાર!`;
+💰 *कुल अनुमानित बजट:* ₹${total.toLocaleString('en-IN')}
+${clientNotes ? `📝 *नोट्स:* ${clientNotes}\n` : ''}
+कृपया इस तारीख को कन्फर्म करने के लिए बताएं। धन्यवाद!`;
 
             // 3. Update UI button and feedback to "Submit Done ✅" immediately with guaranteed visible styles
-            const submitBtn = document.getElementById('submitButton');
             const submitBtnText = document.getElementById('submitButtonText');
             if (submitBtn) {
                 submitBtn.disabled = false;
@@ -729,17 +735,15 @@ ${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
                 submitBtn.className = "w-full mt-2 py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer";
             }
             if (submitBtnText) {
-                submitBtnText.innerHTML = "✅ Submit Done! (સફળતાપૂર્વક સબમિટ થઈ ગયું)";
+                submitBtnText.innerHTML = "✅ Submit Done! (सफलतापूर्वक सबमिट हो गया)";
             }
 
             // Show top sticky banner immediately
-            const topToast = document.getElementById('topSubmitDoneToast');
             if (topToast) {
                 topToast.style.display = 'block';
             }
 
             // Show in-page prominent confirmation banner with direct styles
-            const doneBanner = document.getElementById('submitDoneBanner');
             if (doneBanner) {
                 doneBanner.style.display = 'block';
                 doneBanner.classList.remove('hidden');
@@ -747,11 +751,11 @@ ${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
 
             // Populate Modal Summary
             const modClient = document.getElementById('modalSummaryClient');
-            if (modClient) modClient.innerText = `${isGujarati ? 'ક્લાયન્ટ' : 'Client'}: ${clientName} (${clientPhone})`;
+            if (modClient) modClient.innerText = `${isGujarati ? 'क्लाइंट' : 'Client'}: ${clientName} (${clientPhone})`;
             const modDates = document.getElementById('modalSummaryDates');
-            if (modDates) modDates.innerText = `${isGujarati ? 'તારીખો' : 'Dates'}: ${dates.join(', ')}`;
+            if (modDates) modDates.innerText = `${isGujarati ? 'तारीखें' : 'Dates'}: ${dates.join(', ')}`;
             const modTotal = document.getElementById('modalSummaryTotal');
-            if (modTotal) modTotal.innerText = `${isGujarati ? 'અંદાજિત બજેટ' : 'Total Budget'}: ₹${total.toLocaleString('en-IN')}`;
+            if (modTotal) modTotal.innerText = `${isGujarati ? 'अनुमानित बजट' : 'Total Budget'}: ₹${total.toLocaleString('en-IN')}`;
 
             // Show Success Modal cleanly
             const succModal = document.getElementById('successModal');
@@ -764,7 +768,7 @@ ${clientNotes ? `📝 *નોટ્સ:* ${clientNotes}\n` : ''}
             // Native popup alert so user gets instant 100% confirmation on any mobile browser!
             try {
                 setTimeout(function() {
-                    alert("✅ Submit Done!\n\nતમારી ઇન્ક્વાયરી સફળતાપૂર્વક સબમિટ થઈ ગઈ છે.\nMaruti Photo & Films ને મોકલાઈ ગઈ છે.");
+                    alert("✅ Submit Done!\n\nआपकी पूछताछ सफलतापूर्वक सबमिट हो गई है।\nMaruti Photo & Films को भेज दी गई है।");
                 }, 80);
             } catch(e) {}
         }

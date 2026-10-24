@@ -14,6 +14,9 @@ interface StudioDao {
   @Query("SELECT * FROM studio_dates ORDER BY dateKey ASC")
   fun getAllDatesFlow(): Flow<List<StudioDateEntity>>
 
+  @Query("SELECT * FROM studio_dates ORDER BY dateKey ASC")
+  suspend fun getAllDates(): List<StudioDateEntity>
+
   @Query("SELECT * FROM studio_dates WHERE dateKey = :dateKey LIMIT 1")
   suspend fun getDate(dateKey: String): StudioDateEntity?
 

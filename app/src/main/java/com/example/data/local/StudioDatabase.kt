@@ -16,7 +16,7 @@ import java.time.LocalDate
     InquiryEntity::class,
     StudioProfileEntity::class
   ],
-  version = 3,
+  version = 4,
   exportSchema = false
 )
 abstract class StudioDatabase : RoomDatabase() {
@@ -47,6 +47,23 @@ abstract class StudioDatabase : RoomDatabase() {
         INSTANCE?.let { database ->
           CoroutineScope(Dispatchers.IO).launch {
             seedInitialData(database.studioDao())
+          }
+        }
+      }
+
+      override fun onOpen(db: SupportSQLiteDatabase) {
+        super.onOpen(db)
+        INSTANCE?.let { database ->
+          CoroutineScope(Dispatchers.IO).launch {
+            try {
+              val all = database.studioDao().getAllDates()
+              val hasBooked = all.any { it.status == "BOOKED" }
+              if (!hasBooked) {
+                seedInitialData(database.studioDao())
+              }
+            } catch (e: Exception) {
+              // Ignore
+            }
           }
         }
       }

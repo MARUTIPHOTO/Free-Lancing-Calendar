@@ -181,7 +181,7 @@ class FirestoreSyncManager(
         val location = fields.optJSONObject("location")?.optString("stringValue") ?: ""
         val notes = fields.optJSONObject("notes")?.optString("stringValue") ?: ""
         val rawDates = fields.optJSONObject("dates")?.optString("stringValue")?.trim() ?: ""
-        val effectiveDates = if (rawDates.isNotBlank()) rawDates else "General Inquiry (સામાન્ય ઇન્ક્વાયરી)"
+        val effectiveDates = if (rawDates.isNotBlank()) rawDates else "General Inquiry (सामान्य पूछताछ)"
         val eventType = fields.optJSONObject("eventType")?.optString("stringValue") ?: "Online Inquiry"
 
         val createdAtRaw = fields.optJSONObject("createdAt")?.optString("integerValue")
@@ -222,9 +222,9 @@ class FirestoreSyncManager(
           }
 
           val availabilityTag = if (isAnyDateBooked) {
-            "⚠️ તારીખ પહેલેથી બુક થયેલ છે (Date Already Booked)"
+            "⚠️ तारीख पहले से बुक है (Date Already Booked)"
           } else {
-            "🟢 તારીખ ખાલી છે (Date Free / Available)"
+            "🟢 तारीख खाली है (Date Free / Available)"
           }
 
           val finalNotes = buildString {

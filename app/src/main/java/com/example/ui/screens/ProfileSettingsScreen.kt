@@ -641,7 +641,7 @@ fun ProfileSettingsScreen(
           Icon(Icons.Default.FlashOn, contentDescription = null, tint = Color(0xFFD97706), modifier = Modifier.size(18.dp))
           Spacer(modifier = Modifier.width(6.dp))
           Text(
-            text = if (isHindi) "Google AdMob Testing (બંને એડ ચાલુ છે ✅)" else "Google AdMob Testing (Both Ads Active ✅)",
+            text = if (isHindi) "Google AdMob Testing (दोनों विज्ञापन सक्रिय हैं ✅)" else "Google AdMob Testing (Both Ads Active ✅)",
             fontWeight = FontWeight.Bold,
             fontSize = 13.sp,
             color = Color(0xFF0F172A)
@@ -650,7 +650,7 @@ fun ProfileSettingsScreen(
         Spacer(modifier = Modifier.height(6.dp))
         Text(
           text = if (isHindi)
-            "૧. એપ ઓપન બેનર (ક્લોઝ '✕' કરી એપમાં એન્ટર થવાય)\n૨. નીચેનું ફિક્સ બેનર (ડિસ્ટર્બ કર્યા વગર રહે)"
+            "१. ऐप ओपन बैनर (क्लोज़ '✕' करके ऐप में प्रवेश करें)\n२. नीचे का फिक्स बैनर (बिना रुकावट के रहता है)"
           else
             "1. App Open Ad Banner (with close '✕' to enter app)\n2. Persistent Bottom Banner (without disturbing app)",
           fontSize = 12.sp,
@@ -667,7 +667,7 @@ fun ProfileSettingsScreen(
           shape = RoundedCornerShape(8.dp)
         ) {
           Text(
-            text = if (isHindi) "📢 એપ ખોલતાંની એડ ફરી ટેસ્ટ કરો (Test Open Ad)" else "📢 Test Launch Ad Again",
+            text = if (isHindi) "📢 ऐप खोलते समय का विज्ञापन फिर से टेस्ट करें (Test Open Ad)" else "📢 Test Launch Ad Again",
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold
           )

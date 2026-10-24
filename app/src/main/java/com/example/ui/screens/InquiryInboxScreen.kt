@@ -148,17 +148,17 @@ fun InquiryInboxScreen(
           val testInquiry = InquiryEntity(
             id = System.currentTimeMillis(),
             dateKey = "2026-11-20",
-            clientName = "Rajesh Patel (ટેસ્ટ ક્લાયન્ટ)",
+            clientName = "Rajesh Patel (टेस्ट क्लाइंट)",
             clientPhone = "9876543210",
-            eventType = "Wedding Shoot (શૂટિંગ)",
-            location = "Ahmedabad (અમદાવાદ)",
-            notes = "ટેસ્ટ નોટિફિકેશન ચેક (Test Notification)",
+            eventType = "Wedding Shoot (शूटिंग)",
+            location = "Ahmedabad (अहमदाबाद)",
+            notes = "टेस्ट नोटिफिकेशन चेक (Test Notification)",
             isConfirmed = false,
             isRead = false,
             createdAt = System.currentTimeMillis()
           )
           com.example.util.NotificationHelper.showInquiryNotification(context, testInquiry)
-          Toast.makeText(context, "🔔 નોટિફિકેશન મોકલાયું! ઉપર સ્ટેટસ બાર ચેક કરો.", Toast.LENGTH_SHORT).show()
+          Toast.makeText(context, "🔔 नोटिफिकेशन भेजा गया! ऊपर स्टेटस बार चेक करें।", Toast.LENGTH_SHORT).show()
         },
         modifier = Modifier.size(36.dp)
       ) {
@@ -168,7 +168,7 @@ fun InquiryInboxScreen(
       // Refresh Button
       IconButton(
         onClick = {
-          Toast.makeText(context, if (isHindi) "ઇન્ક્વાયરી ચેક થઈ રહી છે... 🔄" else "Checking for new inquiries... 🔄", Toast.LENGTH_SHORT).show()
+          Toast.makeText(context, if (isHindi) "पूछताछ जाँची जा रही है... 🔄" else "Checking for new inquiries... 🔄", Toast.LENGTH_SHORT).show()
           viewModel.syncManager?.let { sm ->
             coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
               sm.manualRefresh()
@@ -187,7 +187,7 @@ fun InquiryInboxScreen(
         modifier = Modifier.height(30.dp)
       ) {
         Text(
-          text = if (isHindi) "EN" else "ગુજરાતી",
+          text = if (isHindi) "EN" else "हिन्दी",
           fontSize = 11.sp,
           fontWeight = FontWeight.Bold
         )
@@ -479,7 +479,7 @@ private fun InquiryCard(
         }
 
         // Date Availability Status Badge (Booked Conflict vs Free)
-        val isClash = inquiry.notes.contains("Date Already Booked") || inquiry.notes.contains("તારીખ પહેલેથી બુક")
+        val isClash = inquiry.notes.contains("Date Already Booked") || inquiry.notes.contains("तारीख पहले से बुक")
         Spacer(modifier = Modifier.width(4.dp))
         Box(
           modifier = Modifier
@@ -488,7 +488,7 @@ private fun InquiryCard(
             .padding(horizontal = 6.dp, vertical = 3.dp)
         ) {
           Text(
-            text = if (isClash) "⚠️ બુક થયેલ છે" else "🟢 તારીખ ખાલી છે",
+            text = if (isClash) "⚠️ बुक है" else "🟢 तारीख खाली है",
             fontSize = 9.sp,
             fontWeight = FontWeight.Bold,
             color = if (isClash) Color(0xFF991B1B) else Color(0xFF166534)

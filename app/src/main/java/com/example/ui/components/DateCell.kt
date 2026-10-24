@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -70,9 +71,9 @@ fun DateCell(
       StatusYellow
     )
     DateStatus.BOOKED -> Triple(
-      StatusRedContainer.copy(alpha = if (isCurrentMonth) 0.8f else 0.35f),
-      StatusRed.copy(alpha = 0.7f),
-      StatusRed
+      if (isCurrentMonth) Color(0xFFFECACA) else Color(0xFFFEE2E2),
+      Color(0xFFDC2626),
+      Color(0xFFDC2626)
     )
     DateStatus.DEFAULT -> Triple(
       if (isCurrentMonth) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
@@ -89,6 +90,7 @@ fun DateCell(
 
   val finalBorder = when {
     isMultiSelected -> Color(0xFFD97706) // Bold Gold/Amber border
+    status == DateStatus.BOOKED -> Color(0xFFDC2626) // Solid Bold Red for booked/blocked
     isSelected -> MaterialTheme.colorScheme.primary
     isToday -> Color(0xFFD97706)
     else -> baseBorderColor
@@ -96,6 +98,7 @@ fun DateCell(
 
   val borderWidth = when {
     isMultiSelected -> 2.5.dp
+    status == DateStatus.BOOKED -> 2.dp
     isSelected || isToday -> 2.dp
     status != DateStatus.DEFAULT -> 1.dp
     else -> 0.5.dp
@@ -125,38 +128,45 @@ fun DateCell(
         .padding(horizontal = 2.dp, vertical = 3.dp),
       horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      // Top row: Date Number + Status Dot or Multi-Select Checkmark
+      // Top row: Date Number + Status Dot / Lock Icon or Multi-Select Checkmark
       Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
         verticalAlignment = Alignment.CenterVertically
       ) {
         // Date number
+        val dateBoxBg = when {
+          isMultiSelected -> Color(0xFFD97706)
+          status == DateStatus.BOOKED -> Color(0xFFDC2626) // Solid RED badge for booked day
+          isToday -> Color(0xFFD97706)
+          isSelected -> MaterialTheme.colorScheme.primary
+          else -> Color.Transparent
+        }
+
+        val dateTextColor = when {
+          isMultiSelected || isToday || isSelected || status == DateStatus.BOOKED -> Color.White
+          !isCurrentMonth -> Color.Gray.copy(alpha = 0.6f)
+          else -> MaterialTheme.colorScheme.onSurface
+        }
+
         Box(
           modifier = Modifier
             .size(22.dp)
             .clip(CircleShape)
-            .background(
-              if (isMultiSelected) Color(0xFFD97706)
-              else if (isToday) Color(0xFFD97706)
-              else if (isSelected) MaterialTheme.colorScheme.primary
-              else Color.Transparent
-            ),
+            .background(dateBoxBg),
           contentAlignment = Alignment.Center
         ) {
           Text(
             text = "${date.dayOfMonth}",
             fontSize = 11.sp,
             fontWeight = if (isMultiSelected || isToday || isSelected || status != DateStatus.DEFAULT) FontWeight.Bold else FontWeight.Normal,
-            color = if (isMultiSelected || isToday || isSelected) Color.White
-            else if (!isCurrentMonth) Color.Gray.copy(alpha = 0.6f)
-            else MaterialTheme.colorScheme.onSurface,
+            color = dateTextColor,
             textAlign = TextAlign.Center
           )
         }
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Multi-select checkmark OR status dot
+        // Multi-select checkmark OR Booked Lock Icon OR status dot
         if (isMultiSelected) {
           Box(
             modifier = Modifier
@@ -170,6 +180,22 @@ fun DateCell(
               contentDescription = "Selected",
               tint = Color.White,
               modifier = Modifier.size(10.dp)
+            )
+          }
+        } else if (status == DateStatus.BOOKED) {
+          // Solid Red Lock Icon
+          Box(
+            modifier = Modifier
+              .size(16.dp)
+              .clip(CircleShape)
+              .background(Color(0xFFDC2626)),
+            contentAlignment = Alignment.Center
+          ) {
+            Icon(
+              imageVector = Icons.Default.Lock,
+              contentDescription = "Booked & Blocked",
+              tint = Color.White,
+              modifier = Modifier.size(9.dp)
             )
           }
         } else if (status != DateStatus.DEFAULT) {
@@ -230,16 +256,17 @@ fun DateCell(
             modifier = Modifier
               .fillMaxWidth()
               .clip(RoundedCornerShape(4.dp))
-              .background(StatusRed.copy(alpha = 0.22f))
-              .padding(vertical = 1.dp),
+              .background(Color(0xFFDC2626))
+              .padding(vertical = 1.dp, horizontal = 1.dp),
             contentAlignment = Alignment.Center
           ) {
-            val nameSnippet = studioDate?.clientName?.split(" ")?.firstOrNull() ?: "Booked"
+            val nameSnippet = studioDate?.clientName?.split(" ")?.firstOrNull()?.take(5)
+            val label = if (!nameSnippet.isNullOrBlank()) "🔒 $nameSnippet" else "🔒 बुक"
             Text(
-              text = "🔴 $nameSnippet",
-              fontSize = 8.sp,
-              fontWeight = FontWeight.Bold,
-              color = Color(0xFF991B1B),
+              text = label,
+              fontSize = 7.5.sp,
+              fontWeight = FontWeight.ExtraBold,
+              color = Color.White,
               maxLines = 1,
               overflow = TextOverflow.Ellipsis
             )
@@ -252,3 +279,4 @@ fun DateCell(
     }
   }
 }
+

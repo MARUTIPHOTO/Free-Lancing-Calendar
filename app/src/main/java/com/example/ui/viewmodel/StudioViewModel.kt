@@ -7,6 +7,7 @@ import com.example.data.local.InquiryEntity
 import com.example.data.local.StudioDateEntity
 import com.example.data.local.StudioProfileEntity
 import com.example.data.model.DateStatus
+import com.example.data.model.DateWorkAssignment
 import com.example.data.repository.ClearType
 import com.example.data.repository.StudioRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -483,6 +484,42 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
   fun deleteOrCancelBooking(dateKeys: List<String>) {
     viewModelScope.launch {
       repository.deleteBookingDates(dateKeys)
+    }
+  }
+
+  fun updateBookingDetails(
+    dateKeys: List<String>,
+    totalPackageAmount: Double,
+    advanceAmount: Double,
+    eventType: String,
+    location: String,
+    customNote: String
+  ) {
+    viewModelScope.launch {
+      repository.updateBookingDetails(
+        dateKeys = dateKeys,
+        totalPackageAmount = totalPackageAmount,
+        advanceAmount = advanceAmount,
+        eventType = eventType,
+        location = location,
+        customNote = customNote
+      )
+    }
+  }
+
+  fun updateBookingDateAssignments(
+    assignments: List<DateWorkAssignment>,
+    totalPackageAmount: Double,
+    advanceAmount: Double,
+    commonNotes: String
+  ) {
+    viewModelScope.launch {
+      repository.updateBookingDateAssignments(
+        assignments = assignments,
+        totalPackageAmount = totalPackageAmount,
+        advanceAmount = advanceAmount,
+        commonNotes = commonNotes
+      )
     }
   }
 

@@ -58,7 +58,7 @@ fun ConfirmInquiryDialog(
     if (parsed.isNotBlank()) {
       parsed
     } else {
-      val numRegex = "(?:બજેટ|budget|total|pkg)[:\\s]*₹?\\s*([0-9,]+)".toRegex(RegexOption.IGNORE_CASE)
+      val numRegex = "(?:बजट|budget|total|pkg)[:\\s]*₹?\\s*([0-9,]+)".toRegex(RegexOption.IGNORE_CASE)
       val numMatch = numRegex.find(inquiry.notes) ?: numRegex.find(inquiry.eventType)
       numMatch?.groupValues?.get(1)?.replace(",", "")?.trim() ?: ""
     }

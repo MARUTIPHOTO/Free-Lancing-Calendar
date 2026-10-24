@@ -436,7 +436,7 @@ fun DateDetailDialog(
           ) {
             Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.width(4.dp))
-            Text(if (isHindi) "ડિલીટ / રીસેટ" else "Delete / Reset")
+            Text(if (isHindi) "डिलीट / रीसेट" else "Delete / Reset")
           }
         }
 
@@ -492,7 +492,7 @@ fun DateDetailDialog(
       },
       title = {
         Text(
-          text = if (isHindi) "તારીખ $formattedDate ડિલીટ / રીસેટ કરવી છે?" else "Delete / Reset Date $formattedDate?",
+          text = if (isHindi) "तारीख $formattedDate डिलीट / रीसेट करनी है?" else "Delete / Reset Date $formattedDate?",
           fontWeight = FontWeight.Bold,
           fontSize = 16.sp
         )
@@ -500,7 +500,7 @@ fun DateDetailDialog(
       text = {
         Text(
           text = if (isHindi)
-            "શું તમે ખરેખર આ તારીખ [$formattedDate] નું સ્ટેટસ અને બુકિંગ ડિલીટ કરવા માંગો છો? આ તારીખ કેલેન્ડરમાં પાછી Free (🟢 લીલી) થઈ જશે."
+            "क्या आप वाकई इस तारीख [$formattedDate] का स्टेटस और बुकिंग डिलीट करना चाहते हैं? यह तारीख कैलेंडर में वापस Free (🟢 हरी) हो जाएगी।"
           else
             "Are you sure you want to delete and reset date [$formattedDate]? It will turn back to Free (🟢 Green).",
           fontSize = 13.sp
@@ -516,12 +516,12 @@ fun DateDetailDialog(
           colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
           modifier = Modifier.testTag("confirm_date_reset_btn")
         ) {
-          Text(if (isHindi) "હા, ડિલીટ કરો" else "Yes, Delete", color = Color.White)
+          Text(if (isHindi) "हाँ, डिलीट करें" else "Yes, Delete", color = Color.White)
         }
       },
       dismissButton = {
         OutlinedButton(onClick = { showDeleteConfirmDialog = false }) {
-          Text(if (isHindi) "ના / રદ્દ કરો" else "Cancel")
+          Text(if (isHindi) "रद्द करें" else "Cancel")
         }
       }
     )

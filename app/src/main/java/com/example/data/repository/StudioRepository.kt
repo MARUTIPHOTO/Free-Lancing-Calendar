@@ -5,6 +5,7 @@ import com.example.data.local.StudioDao
 import com.example.data.local.StudioDateEntity
 import com.example.data.local.StudioProfileEntity
 import com.example.data.model.DateStatus
+import com.example.data.model.DateWorkAssignment
 import kotlinx.coroutines.flow.Flow
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -245,6 +246,122 @@ class StudioRepository(private val dao: StudioDao) {
       )
     }
     dao.upsertDates(entities)
+  }
+
+  suspend fun updateBookingDetails(
+    dateKeys: List<String>,
+    totalPackageAmount: Double,
+    advanceAmount: Double,
+    eventType: String,
+    location: String,
+    customNote: String
+  ) {
+    val count = dateKeys.size.coerceAtLeast(1)
+    val advPerDate = advanceAmount / count
+    val totPerDate = totalPackageAmount / count
+
+    val entities = dateKeys.map { key ->
+      val existing = dao.getDate(key)
+      (existing ?: StudioDateEntity(dateKey = key)).copy(
+        status = DateStatus.BOOKED.name,
+        totalPackageAmount = totPerDate,
+        advanceAmount = advPerDate,
+        eventType = eventType.ifBlank { existing?.eventType ?: "" },
+        location = location.ifBlank { existing?.location ?: "" },
+        customNote = customNote.ifBlank { existing?.customNote ?: "" },
+        updatedAt = System.currentTimeMillis()
+      )
+    }
+    dao.upsertDates(entities)
+  }
+
+  suspend fun updateBookingDateAssignments(
+    assignments: List<DateWorkAssignment>,
+    totalPackageAmount: Double,
+    advanceAmount: Double,
+    commonNotes: String
+  ) {
+    val count = assignments.size.coerceAtLeast(1)
+    val advPerDate = advanceAmount / count
+    val totPerDate = totalPackageAmount / count
+
+    assignments.forEach { item ->
+      val existing = dao.getDate(item.originalDateKey)
+      val clientName = existing?.clientName ?: ""
+      val clientPhone = existing?.clientPhone ?: ""
+      val sourceStudio = existing?.bookingSourceStudio ?: ""
+      val shift = existing?.shiftType ?: "Full Day (पूरा दिन)"
+      val gear = existing?.gearRequired ?: ""
+
+      if (item.originalDateKey != item.newDateKey) {
+        // 1. Free old date in calendar
+        if (existing != null) {
+          dao.upsertDate(
+            existing.copy(
+              status = DateStatus.DEFAULT.name,
+              clientName = "",
+              clientPhone = "",
+              eventType = "",
+              location = "",
+              customNote = "Free after date change",
+              advanceAmount = 0.0,
+              totalPackageAmount = 0.0,
+              bookingSourceStudio = "",
+              gearRequired = "",
+              updatedAt = System.currentTimeMillis()
+            )
+          )
+        }
+        // 2. Book new date with solid RED (DateStatus.BOOKED)
+        val existingNew = dao.getDate(item.newDateKey)
+        dao.upsertDate(
+          (existingNew ?: StudioDateEntity(dateKey = item.newDateKey)).copy(
+            status = DateStatus.BOOKED.name,
+            clientName = clientName,
+            clientPhone = clientPhone,
+            eventType = item.eventType,
+            location = item.location,
+            customNote = commonNotes,
+            advanceAmount = advPerDate,
+            totalPackageAmount = totPerDate,
+            bookingSourceStudio = sourceStudio,
+            shiftType = shift,
+            gearRequired = gear,
+            updatedAt = System.currentTimeMillis()
+          )
+        )
+      } else {
+        // Same date: update service type, location, and finance
+        if (existing != null) {
+          dao.upsertDate(
+            existing.copy(
+              status = DateStatus.BOOKED.name,
+              eventType = item.eventType,
+              location = item.location,
+              customNote = commonNotes,
+              advanceAmount = advPerDate,
+              totalPackageAmount = totPerDate,
+              updatedAt = System.currentTimeMillis()
+            )
+          )
+        } else {
+          dao.upsertDate(
+            StudioDateEntity(
+              dateKey = item.originalDateKey,
+              status = DateStatus.BOOKED.name,
+              clientName = clientName,
+              clientPhone = clientPhone,
+              eventType = item.eventType,
+              location = item.location,
+              customNote = commonNotes,
+              advanceAmount = advPerDate,
+              totalPackageAmount = totPerDate,
+              updatedAt = System.currentTimeMillis()
+            )
+          )
+        }
+      }
+    }
   }
 
   suspend fun markInquiryAsRead(inquiryId: Long) {

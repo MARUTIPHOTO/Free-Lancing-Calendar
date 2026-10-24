@@ -53,3 +53,10 @@ enum class DateStatus(
     }
   }
 }
+
+data class DateWorkAssignment(
+  val originalDateKey: String,
+  val newDateKey: String,
+  val eventType: String,
+  val location: String = ""
+)
