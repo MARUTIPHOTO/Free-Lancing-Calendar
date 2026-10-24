@@ -65,6 +65,7 @@ class FirestoreSyncManager(
       while (isActive) {
         try {
           fetchInquiriesFromCloudRest()
+          syncBookedDatesToCloudRest()
         } catch (e: Exception) {
           Log.w(TAG, "Polling cycle error: ${e.message}")
         }
@@ -82,6 +83,7 @@ class FirestoreSyncManager(
           if (e == null) {
             scope.launch(Dispatchers.IO) {
               fetchInquiriesFromCloudRest()
+              syncBookedDatesToCloudRest()
             }
           }
         }
@@ -94,6 +96,47 @@ class FirestoreSyncManager(
   suspend fun manualRefresh() {
     withContext(Dispatchers.IO) {
       fetchInquiriesFromCloudRest()
+      syncBookedDatesToCloudRest()
+    }
+  }
+
+  suspend fun syncBookedDatesToCloudRest() {
+    var connection: HttpURLConnection? = null
+    try {
+      val bookedList = dao.getAllDates().filter { it.status == "BOOKED" }.map { it.dateKey }
+      val scheduleUrl = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/marutiphoto/schedule/booked_dates?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc"
+      val url = URL(scheduleUrl)
+      connection = (url.openConnection() as HttpURLConnection).apply {
+        requestMethod = "POST"
+        setRequestProperty("X-HTTP-Method-Override", "PATCH")
+        setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+        connectTimeout = 6000
+        readTimeout = 6000
+        doOutput = true
+      }
+      val arrayValues = JSONArray().apply {
+        bookedList.forEach { d ->
+          put(JSONObject().apply { put("stringValue", d) })
+        }
+      }
+      val payload = JSONObject().apply {
+        put("fields", JSONObject().apply {
+          put("dates", JSONObject().apply {
+            put("arrayValue", JSONObject().apply {
+              put("values", arrayValues)
+            })
+          })
+          put("updatedAt", JSONObject().apply {
+            put("integerValue", System.currentTimeMillis().toString())
+          })
+        })
+      }
+      OutputStreamWriter(connection.outputStream, "UTF-8").use { it.write(payload.toString()) }
+      connection.responseCode
+    } catch (e: Exception) {
+      Log.w(TAG, "Sync booked dates error: ${e.message}")
+    } finally {
+      connection?.disconnect()
     }
   }
 

@@ -306,9 +306,12 @@
         let currentMonth = new Date().getMonth(); // 0 to 11
         // Map: 'YYYY-MM-DD' -> serviceId
         let selectedDatesMap = {};
-        // Set of blocked / already booked dates for demo/sample
+        // Set of blocked / already booked dates for studio
         const bookedDates = new Set();
         let lastWhatsAppMessage = "";
+
+        // Firestore REST endpoint for live studio booked dates
+        const FIRESTORE_SCHEDULE_URL = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/marutiphoto/schedule/booked_dates?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc";
 
         // Month Names
         const monthsHi = ["जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून", "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"];
@@ -321,6 +324,32 @@
             try { updateUIStrings(); } catch (e) { console.warn(e); }
             try { renderSelectedServicesList(); } catch (e) { console.warn(e); }
             try { if (window.lucide) lucide.createIcons(); } catch(e){}
+            // Fetch live booked/fixed dates from cloud Firestore
+            fetchLiveBookedDates();
+            // Periodic polling every 8 seconds for live calendar updates
+            setInterval(fetchLiveBookedDates, 8000);
+        }
+
+        async function fetchLiveBookedDates() {
+            try {
+                const resp = await fetch(FIRESTORE_SCHEDULE_URL);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const values = data?.fields?.dates?.arrayValue?.values || [];
+                    let hasNew = false;
+                    values.forEach(v => {
+                        if (v.stringValue && !bookedDates.has(v.stringValue.trim())) {
+                            bookedDates.add(v.stringValue.trim());
+                            hasNew = true;
+                        }
+                    });
+                    if (hasNew) {
+                        renderCalendar();
+                    }
+                }
+            } catch (e) {
+                console.warn("Could not fetch cloud booked dates:", e);
+            }
         }
 
         if (document.readyState === 'loading') {
@@ -329,11 +358,12 @@
             initApp();
         }
 
-        // Parse query params (e.g. ?dates=2026-11-15,2026-11-16&studio=Maruti)
+        // Parse query params (e.g. ?dates=2026-11-15,2026-11-16&fixed=2026-11-12,2026-11-14&studio=Maruti)
         function parseUrlParameters() {
             try {
                 const params = new URLSearchParams(window.location.search);
                 const datesParam = params.get('dates');
+                const fixedParam = params.get('fixed') || params.get('booked');
                 const studioParam = params.get('studio');
 
                 if (studioParam) {
@@ -342,6 +372,16 @@
                     if (studioEl) {
                         studioEl.innerHTML = `${STUDIO_INFO.name} <span class="text-[10px] bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-semibold">Verified Studio</span>`;
                     }
+                }
+
+                // If explicit fixed/booked dates passed in URL
+                if (fixedParam) {
+                    fixedParam.split(',').forEach(d => {
+                        const trimmed = d.trim();
+                        if (trimmed) {
+                            bookedDates.add(trimmed);
+                        }
+                    });
                 }
 
                 if (datesParam) {
@@ -464,16 +504,60 @@
                 const isToday = (todayStr === dateISO);
 
                 const cell = document.createElement('div');
-                cell.className = `h-11 sm:h-12 rounded-lg p-1 text-center flex flex-col items-center justify-between cursor-pointer transition-all border ${
-                    isSelected ? 'bg-amber-500 border-amber-600 text-slate-950 font-bold shadow-sm' :
-                    isBooked ? 'bg-rose-50 border-rose-200 text-rose-700 cursor-not-allowed opacity-80' :
-                    isToday ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold' :
-                    'bg-emerald-50/60 border-emerald-100 hover:border-emerald-300 text-slate-800'
-                }`;
+                cell.style.minHeight = '48px';
+                cell.style.borderRadius = '8px';
+                cell.style.padding = '4px 2px';
+                cell.style.textAlign = 'center';
+                cell.style.display = 'flex';
+                cell.style.flexDirection = 'column';
+                cell.style.alignItems = 'center';
+                cell.style.justifyContent = 'space-between';
+                cell.style.boxSizing = 'border-box';
+                cell.style.transition = 'all 0.15s ease';
+
+                if (isBooked) {
+                    cell.style.backgroundColor = '#fee2e2'; // Light Red
+                    cell.style.border = '2px solid #ef4444'; // Red border
+                    cell.style.cursor = 'not-allowed';
+                    cell.innerHTML = `
+                        <span style="font-size:12px; font-weight:800; color:#991b1b;">${d}</span>
+                        <div style="font-size:9px; font-weight:800; color:#b91c1c; background:#fecaca; padding:2px 4px; border-radius:4px; line-height:1; display:flex; align-items:center; gap:2px;">
+                            <span>🔒</span>
+                            <span>Fix</span>
+                        </div>
+                    `;
+                } else if (isSelected) {
+                    cell.style.backgroundColor = '#f59e0b'; // Amber
+                    cell.style.border = '2px solid #d97706';
+                    cell.style.cursor = 'pointer';
+                    cell.innerHTML = `
+                        <span style="font-size:12px; font-weight:800; color:#ffffff;">${d}</span>
+                        <span style="font-size:9px; font-weight:bold; color:#ffffff; background:#b45309; padding:1px 3px; border-radius:3px;">✓ Selected</span>
+                    `;
+                } else if (isToday) {
+                    cell.style.backgroundColor = '#eff6ff'; // Light Blue
+                    cell.style.border = '1.5px solid #3b82f6';
+                    cell.style.cursor = 'pointer';
+                    cell.innerHTML = `
+                        <span style="font-size:12px; font-weight:800; color:#1d4ed8;">${d}</span>
+                        <span style="font-size:8px; font-weight:bold; color:#2563eb;">Today</span>
+                    `;
+                } else {
+                    cell.style.backgroundColor = '#ecfdf5'; // Light Green
+                    cell.style.border = '1px solid #a7f3d0';
+                    cell.style.cursor = 'pointer';
+                    cell.innerHTML = `
+                        <span style="font-size:12px; font-weight:600; color:#0f172a;">${d}</span>
+                        <div style="display:flex; align-items:center; justify-content:center; gap:2px;">
+                            <span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981;"></span>
+                            <span style="font-size:8px; color:#059669; font-weight:bold;">Open</span>
+                        </div>
+                    `;
+                }
 
                 cell.onclick = () => {
                     if (isBooked) {
-                        alert(isGujarati ? "यह तारीख पहले से ही बुक है 🔒" : "This date is already booked / blocked 🔒");
+                        alert(isGujarati ? "यह तारीख पहले से ही फिक्स / बुक है 🔒" : "This date is already fixed / booked 🔒");
                         return;
                     }
                     if (selectedDatesMap[dateISO]) {
@@ -484,15 +568,6 @@
                     renderCalendar();
                     renderSelectedServicesList();
                 };
-
-                cell.innerHTML = `
-                    <span class="text-xs ${isSelected ? 'font-extrabold text-white' : ''}">${d}</span>
-                    <div class="text-[9px]">
-                        ${isSelected ? '<span class="text-white text-[10px]">✓</span>' :
-                          isBooked ? '<span class="text-rose-600 font-bold">🔒</span>' :
-                          '<span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>'}
-                    </div>
-                `;
 
                 grid.appendChild(cell);
             }
