@@ -315,8 +315,12 @@
         let currentMonth = new Date().getMonth(); // 0 to 11
         // Map: 'YYYY-MM-DD' -> serviceId
         let selectedDatesMap = {};
+        // Set of blocked / already booked dates for studio
+        let bookedDates = new Set();
         let currentStudioSlug = "marutiphoto";
         let urlFixedDates = [];
+        let isFormSubmitted = false;
+        let lastWhatsAppMessage = "";
 
         function getStudioSlug() {
             return currentStudioSlug || "marutiphoto";
@@ -481,10 +485,8 @@
             document.getElementById('labelNotes').innerText = isGujarati ? "शूटिंग विवरण / अतिरिक्त नोट्स (Optional)" : "Special Requirements / Notes (Optional)";
 
             updateSubmitButtonText();
-            lucide.createIcons();
+            try { if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons(); } catch(e){}
         }
-
-        let isFormSubmitted = false;
 
         function updateSubmitButtonText() {
             if (isFormSubmitted) return;
@@ -514,9 +516,11 @@
         // Calendar Logic
         function renderCalendar() {
             const monthText = isGujarati ? monthsHi[currentMonth] : monthsEn[currentMonth];
-            document.getElementById('currentMonthYearText').innerText = `${monthText} ${currentYear}`;
+            const monthYearEl = document.getElementById('currentMonthYearText');
+            if (monthYearEl) monthYearEl.innerText = `${monthText} ${currentYear}`;
 
             const grid = document.getElementById('calendarDaysGrid');
+            if (!grid) return;
             grid.innerHTML = '';
 
             const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay(); // 0 is Sunday
@@ -714,7 +718,7 @@
             const total = calculateTotalBudget();
             document.getElementById('totalEstimateAmount').innerText = `₹${total.toLocaleString('en-IN')}`;
             updateSubmitButtonText();
-            lucide.createIcons();
+            try { if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons(); } catch(e){}
         }
 
         function setServiceForDate(dateKey, serviceId) {
