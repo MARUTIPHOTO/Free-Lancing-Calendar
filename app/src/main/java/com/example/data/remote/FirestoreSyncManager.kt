@@ -34,10 +34,21 @@ class FirestoreSyncManager(
   private val databaseId = "ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c"
   private val apiKey = "AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc"
   var currentStudioSlug: String = "marutiphoto"
-  private val queryUrl: String
-    get() = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/$databaseId/documents/studios/$currentStudioSlug:runQuery?key=$apiKey"
 
-  private var listenerRegistration: ListenerRegistration? = null
+  fun getTargetStudioSlugs(): Set<String> {
+    val slugs = linkedSetOf<String>()
+    val trimmed = currentStudioSlug.trim()
+    if (trimmed.isNotBlank()) slugs.add(trimmed)
+    slugs.add("marutiphoto")
+    slugs.add("freelancingcalendar")
+    return slugs
+  }
+
+  private fun getQueryUrl(slug: String): String {
+    return "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/$databaseId/documents/studios/$slug:runQuery?key=$apiKey"
+  }
+
+  private val listenerRegistrations = mutableListOf<ListenerRegistration>()
   private var firestore: FirebaseFirestore? = null
   private var pollingJob: Job? = null
 
@@ -81,18 +92,30 @@ class FirestoreSyncManager(
       }
     }
 
-    // 2. Also attach Firebase SDK Snapshot Listener if available
+    // 2. Also attach Firebase SDK Snapshot Listeners for all target slugs
     try {
       val db = firestore
       if (db != null) {
-        listenerRegistration?.remove()
-        val collectionRef = db.collection("studios").document("marutiphoto").collection("inquiries")
-        listenerRegistration = collectionRef.addSnapshotListener { _, e ->
-          if (e == null) {
-            scope.launch(Dispatchers.IO) {
-              fetchInquiriesFromCloudRest()
-              syncBookedDatesToCloudRest()
+        synchronized(listenerRegistrations) {
+          listenerRegistrations.forEach { it.remove() }
+          listenerRegistrations.clear()
+        }
+        for (slug in getTargetStudioSlugs()) {
+          try {
+            val collectionRef = db.collection("studios").document(slug).collection("inquiries")
+            val reg = collectionRef.addSnapshotListener { _, e ->
+              if (e == null) {
+                scope.launch(Dispatchers.IO) {
+                  fetchInquiriesFromCloudRest()
+                  syncBookedDatesToCloudRest()
+                }
+              }
             }
+            synchronized(listenerRegistrations) {
+              listenerRegistrations.add(reg)
+            }
+          } catch (e: Exception) {
+            Log.w(TAG, "Failed to attach snapshot listener for $slug: ${e.message}")
           }
         }
       }
@@ -109,10 +132,16 @@ class FirestoreSyncManager(
   }
 
   suspend fun syncBookedDatesToCloudRest() {
+    val bookedList = dao.getAllDates().filter { it.status == "BOOKED" }.map { it.dateKey }
+    for (slug in getTargetStudioSlugs()) {
+      syncBookedDatesForSlug(slug, bookedList)
+    }
+  }
+
+  private fun syncBookedDatesForSlug(slug: String, bookedList: List<String>) {
     var connection: HttpURLConnection? = null
     try {
-      val bookedList = dao.getAllDates().filter { it.status == "BOOKED" }.map { it.dateKey }
-      val scheduleUrl = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/$currentStudioSlug/schedule/booked_dates?updateMask.fieldPaths=dates&updateMask.fieldPaths=updatedAt&key=$apiKey"
+      val scheduleUrl = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/$databaseId/documents/studios/$slug/schedule/booked_dates?updateMask.fieldPaths=dates&updateMask.fieldPaths=updatedAt&key=$apiKey"
       val url = URL(scheduleUrl)
       connection = (url.openConnection() as HttpURLConnection).apply {
         requestMethod = "POST"
@@ -143,19 +172,24 @@ class FirestoreSyncManager(
         })
       }
       OutputStreamWriter(connection.outputStream, "UTF-8").use { it.write(payload.toString()) }
-      val code = connection.responseCode
-      Log.d(TAG, "syncBookedDatesToCloudRest code: $code, count: ${bookedList.size}")
+      connection.responseCode
     } catch (e: Exception) {
-      Log.w(TAG, "Sync booked dates error: ${e.message}")
+      Log.w(TAG, "Sync booked dates error for $slug: ${e.message}")
     } finally {
       connection?.disconnect()
     }
   }
 
   private suspend fun fetchInquiriesFromCloudRest() {
+    for (slug in getTargetStudioSlugs()) {
+      fetchInquiriesForSlug(slug)
+    }
+  }
+
+  private suspend fun fetchInquiriesForSlug(slug: String) {
     var connection: HttpURLConnection? = null
     try {
-      val url = URL(queryUrl)
+      val url = URL(getQueryUrl(slug))
       connection = (url.openConnection() as HttpURLConnection).apply {
         requestMethod = "POST"
         setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -189,10 +223,10 @@ class FirestoreSyncManager(
 
         parseAndSyncInquiries(responseBody)
       } else {
-        Log.w(TAG, "Cloud REST returned status code: $responseCode")
+        Log.w(TAG, "Cloud REST returned status code: $responseCode for slug: $slug")
       }
     } catch (e: Exception) {
-      Log.w(TAG, "REST sync network error: ${e.message}")
+      Log.w(TAG, "REST sync network error for slug $slug: ${e.message}")
     } finally {
       connection?.disconnect()
     }
@@ -212,7 +246,7 @@ class FirestoreSyncManager(
       val jsonArray = JSONArray(jsonString)
       val existingInquiries = dao.getAllInquiriesFlow().first()
       val newlyKnownIds = mutableSetOf<String>()
-      var isFirstRun = isFirstSyncCycle
+      val isFirstRun = isFirstSyncCycle
 
       for (i in 0 until jsonArray.length()) {
         val item = jsonArray.optJSONObject(i) ?: continue
@@ -325,8 +359,11 @@ class FirestoreSyncManager(
             }
           }
 
-          // Trigger notification ONLY if this is a genuinely NEW inquiry and NOT the initial load of old inquiries
-          if (!isFirstRun && !isAlreadyKnown && status == "PENDING") {
+          // Trigger notification for new pending inquiries (within 48h or after first sync)
+          val isRecent = (System.currentTimeMillis() - createdAt) < (48 * 60 * 60 * 1000L)
+          val shouldNotify = status == "PENDING" && !isAlreadyKnown && (!isFirstRun || isRecent)
+
+          if (shouldNotify) {
             Log.d(TAG, "New incoming inquiry detected! Showing notification for: $clientName ($clientPhone)")
             NotificationHelper.showInquiryNotification(context, savedInquiry, isBookedConflict = isAnyDateBooked)
             withContext(Dispatchers.Main) {
@@ -358,21 +395,25 @@ class FirestoreSyncManager(
   fun stopListening() {
     pollingJob?.cancel()
     pollingJob = null
-    listenerRegistration?.remove()
-    listenerRegistration = null
+    synchronized(listenerRegistrations) {
+      listenerRegistrations.forEach { it.remove() }
+      listenerRegistrations.clear()
+    }
   }
 
   suspend fun markInquiryConfirmed(clientPhone: String, dates: String) {
     withContext(Dispatchers.IO) {
       try {
         val db = firestore ?: return@withContext
-        val query = db.collection("studios").document("marutiphoto").collection("inquiries")
-          .whereEqualTo("clientPhone", clientPhone)
-          .get()
-        query.addOnSuccessListener { snapshots ->
-          for (doc in snapshots.documents) {
-            doc.reference.update("status", "CONFIRMED")
-          }
+        for (slug in getTargetStudioSlugs()) {
+          db.collection("studios").document(slug).collection("inquiries")
+            .whereEqualTo("clientPhone", clientPhone)
+            .get()
+            .addOnSuccessListener { snapshots ->
+              for (doc in snapshots.documents) {
+                doc.reference.update("status", "CONFIRMED")
+              }
+            }
         }
       } catch (e: Exception) {
         Log.w(TAG, "Failed to mark inquiry confirmed in cloud: ${e.message}")
@@ -395,31 +436,35 @@ class FirestoreSyncManager(
         notificationManager?.cancelAll()
       } catch (_: Exception) {}
 
-      // 3. Immediately DELETE the inquiry document from cloud Firestore via REST
-      try {
-        deleteInquiriesByPhoneFromCloudRest(trimmedPhone)
-      } catch (e: Exception) {
-        Log.w(TAG, "Failed to delete inquiry from cloud REST: ${e.message}")
+      // 3. Immediately DELETE the inquiry document from cloud Firestore via REST across all target slugs
+      for (slug in getTargetStudioSlugs()) {
+        try {
+          deleteInquiriesByPhoneFromCloudRestForSlug(slug, trimmedPhone)
+        } catch (e: Exception) {
+          Log.w(TAG, "Failed to delete inquiry from cloud REST for slug $slug: ${e.message}")
+        }
       }
 
-      // 4. Also delete via Firestore SDK if initialized
+      // 4. Also delete via Firestore SDK if initialized across all target slugs
       try {
-        firestore?.collection("studios")?.document("marutiphoto")?.collection("inquiries")
-          ?.whereEqualTo("clientPhone", trimmedPhone)
-          ?.get()
-          ?.addOnSuccessListener { snapshots ->
-            for (doc in snapshots.documents) {
-              doc.reference.delete()
+        for (slug in getTargetStudioSlugs()) {
+          firestore?.collection("studios")?.document(slug)?.collection("inquiries")
+            ?.whereEqualTo("clientPhone", trimmedPhone)
+            ?.get()
+            ?.addOnSuccessListener { snapshots ->
+              for (doc in snapshots.documents) {
+                doc.reference.delete()
+              }
             }
-          }
+        }
       } catch (_: Exception) {}
     }
   }
 
-  private fun deleteInquiriesByPhoneFromCloudRest(phone: String) {
+  private fun deleteInquiriesByPhoneFromCloudRestForSlug(slug: String, phone: String) {
     var connection: HttpURLConnection? = null
     try {
-      val url = URL(queryUrl)
+      val url = URL(getQueryUrl(slug))
       connection = (url.openConnection() as HttpURLConnection).apply {
         requestMethod = "POST"
         setRequestProperty("Content-Type", "application/json; charset=UTF-8")
@@ -464,7 +509,7 @@ class FirestoreSyncManager(
         }
       }
     } catch (e: Exception) {
-      Log.w(TAG, "Error finding inquiries to delete: ${e.message}")
+      Log.w(TAG, "Error finding inquiries to delete for $slug: ${e.message}")
     } finally {
       connection?.disconnect()
     }

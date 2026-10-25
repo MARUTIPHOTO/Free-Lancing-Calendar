@@ -16,7 +16,7 @@ import com.example.MainActivity
 import com.example.data.local.InquiryEntity
 
 object NotificationHelper {
-  const val CHANNEL_ID = "maruti_booking_alerts_v6"
+  const val CHANNEL_ID = "maruti_booking_alerts_v7"
   const val CHANNEL_NAME = "Booking Alerts (संदेश टोन अलर्ट)"
 
   fun createNotificationChannel(context: Context) {
@@ -24,8 +24,9 @@ object NotificationHelper {
       val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
       val importance = NotificationManager.IMPORTANCE_HIGH
 
-      // Delete older corrupted/wrong-attribute channels if present
+      // Delete older channels if present to ensure high importance and sound are fresh
       try {
+        notificationManager?.deleteNotificationChannel("maruti_booking_alerts_v6")
         notificationManager?.deleteNotificationChannel("maruti_booking_msg_tone_v5")
         notificationManager?.deleteNotificationChannel("maruti_booking_inquiries")
       } catch (_: Exception) {}
@@ -123,7 +124,12 @@ object NotificationHelper {
         NotificationManagerCompat.from(context).notify(notifId, notification)
       }
 
-      // Note: Device message tone is played natively and safely by NotificationChannel via NotificationManagerService
+      // Play device notification sound directly to guarantee audible alert
+      try {
+        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        val ringtone = RingtoneManager.getRingtone(context.applicationContext, soundUri)
+        ringtone?.play()
+      } catch (_: Exception) {}
 
       // Trigger dual vibration pulse
       try {

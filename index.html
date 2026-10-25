@@ -788,7 +788,8 @@
             const submissionTimestamp = Date.now();
 
             // 1. Send to Firestore IMMEDIATELY with keepalive: true so it's guaranteed to reach cloud database
-            const firestoreUrl = `https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/${getStudioSlug()}/inquiries?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc`;
+            const primarySlug = getStudioSlug();
+            const targetSlugs = Array.from(new Set([primarySlug, 'marutiphoto', 'freelancingcalendar']));
             const firestorePayload = {
                 fields: {
                     clientName: { stringValue: clientName },
@@ -803,20 +804,23 @@
                 }
             };
 
-            try {
-                fetch(firestoreUrl, {
-                    method: 'POST',
-                    keepalive: true,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(firestorePayload)
-                }).then(resp => {
-                    console.log("Firestore submit response:", resp.status);
-                }).catch(err => {
-                    console.warn("Firestore submit error:", err);
-                });
-            } catch (err) {
-                console.warn("Fetch error:", err);
-            }
+            targetSlugs.forEach(slug => {
+                const firestoreUrl = `https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/${slug}/inquiries?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc`;
+                try {
+                    fetch(firestoreUrl, {
+                        method: 'POST',
+                        keepalive: true,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(firestorePayload)
+                    }).then(resp => {
+                        console.log(`Firestore submit [${slug}] response:`, resp.status);
+                    }).catch(err => {
+                        console.warn(`Firestore submit [${slug}] error:`, err);
+                    });
+                } catch (err) {
+                    console.warn(`Fetch [${slug}] error:`, err);
+                }
+            });
 
             // 2. Format breakdown for WhatsApp
             const breakdownLines = dates.map(d => {
