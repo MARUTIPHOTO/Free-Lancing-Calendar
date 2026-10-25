@@ -292,6 +292,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     if (dates.isEmpty()) return
     viewModelScope.launch {
       repository.markMultipleDatesFree(dates, note)
+      syncManager?.syncBookedDatesToCloudRest()
       exitMultiSelectMode()
     }
   }
@@ -333,6 +334,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
         totalPackageAmount = total,
         note = note
       )
+      syncManager?.syncBookedDatesToCloudRest()
       _showBulkActionDialog.value = false
       exitMultiSelectMode()
     }
@@ -366,6 +368,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     if (dates.isEmpty()) return
     viewModelScope.launch {
       repository.resetMultipleDates(dates)
+      syncManager?.syncBookedDatesToCloudRest()
       exitMultiSelectMode()
     }
   }
@@ -384,6 +387,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
   fun setDateStatusFree(dateKey: String, note: String = "") {
     viewModelScope.launch {
       repository.markDateFree(dateKey, note)
+      syncManager?.syncBookedDatesToCloudRest()
     }
   }
 
@@ -408,6 +412,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
         totalPackageAmount = total,
         note = note
       )
+      syncManager?.syncBookedDatesToCloudRest()
     }
   }
 
@@ -434,6 +439,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
   fun resetDate(dateKey: String) {
     viewModelScope.launch {
       repository.resetDate(dateKey)
+      syncManager?.syncBookedDatesToCloudRest()
     }
   }
 
@@ -454,6 +460,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
         notes = inquiry.notes
       )
       syncManager?.markInquiryConfirmed(inquiry.clientPhone, inquiry.dateKey)
+      syncManager?.syncBookedDatesToCloudRest()
       _inquiryToConfirm.value = null
       if (_bannerNotification.value?.id == inquiry.id) {
         _bannerNotification.value = null
@@ -465,6 +472,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     viewModelScope.launch {
       repository.declineInquiry(inquiry.id, inquiry.dateKey, makeFree)
       syncManager?.markInquiryDeclined(inquiry.clientPhone, inquiry.dateKey)
+      syncManager?.syncBookedDatesToCloudRest()
       if (_bannerNotification.value?.id == inquiry.id) {
         _bannerNotification.value = null
       }
@@ -475,6 +483,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     viewModelScope.launch {
       repository.declineInquiry(inquiry.id, inquiry.dateKey, makeFree = true)
       syncManager?.markInquiryDeclined(inquiry.clientPhone, inquiry.dateKey)
+      syncManager?.syncBookedDatesToCloudRest()
       if (_bannerNotification.value?.id == inquiry.id) {
         _bannerNotification.value = null
       }
@@ -484,6 +493,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
   fun deleteOrCancelBooking(dateKeys: List<String>) {
     viewModelScope.launch {
       repository.deleteBookingDates(dateKeys)
+      syncManager?.syncBookedDatesToCloudRest()
     }
   }
 
@@ -606,6 +616,7 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     viewModelScope.launch {
       val prefix = String.format("%04d-%02d", _currentYearMonth.value.year, _currentYearMonth.value.monthValue)
       repository.clearCalendar(clearType, currentMonthPrefix = prefix)
+      syncManager?.syncBookedDatesToCloudRest()
       _showClearDialog.value = false
     }
   }

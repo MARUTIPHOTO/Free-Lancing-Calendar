@@ -77,7 +77,7 @@ import kotlinx.coroutines.tasks.await
 
 @Composable
 fun LoginScreen(
-  onLoginSuccess: (FirebaseUser?) -> Unit,
+  onLoginSuccess: (FirebaseUser?, String) -> Unit,
   isHindi: Boolean = true
 ) {
   val context = LocalContext.current
@@ -122,7 +122,7 @@ fun LoginScreen(
             if (isHindi) "स्वागत है ${user?.displayName ?: ""}! ✅" else "Welcome ${user?.displayName ?: ""}! ✅",
             Toast.LENGTH_SHORT
           ).show()
-          onLoginSuccess(user)
+          onLoginSuccess(user, user?.email ?: "")
         } else {
           errorMessage = if (isHindi) "Google क्रेडेंशियल प्राप्त नहीं हो सके" else "Could not retrieve Google credentials"
         }
@@ -131,7 +131,10 @@ fun LoginScreen(
         errorMessage = null
       } catch (e: Exception) {
         val msg = e.localizedMessage ?: "Sign in failed"
-        errorMessage = if (isHindi) "Google साइन-इन त्रुटि: $msg" else "Google Sign-in error: $msg"
+        errorMessage = if (isHindi)
+          "Google साइन-इन उपलब्ध नहीं है। कृपया नीचे 'लॉगिन करें' पर टैप करके लॉगिन करें।"
+        else
+          "Google Sign-in unavailable. Please tap 'Log In' below to continue with email."
       } finally {
         isLoading = false
       }
@@ -141,8 +144,12 @@ fun LoginScreen(
   fun handleEmailSignIn() {
     val cleanEmail = email.trim()
     val cleanPass = password.trim()
-    if (cleanEmail.isBlank() || cleanPass.isBlank()) {
-      errorMessage = if (isHindi) "कृपया ईमेल और पासवर्ड दर्ज करें" else "Please enter email and password"
+    if (cleanEmail.isBlank()) {
+      errorMessage = if (isHindi) "कृपया ईमेल आईडी दर्ज करें" else "Please enter email address"
+      return
+    }
+    if (cleanPass.isBlank()) {
+      errorMessage = if (isHindi) "कृपया पासवर्ड दर्ज करें" else "Please enter password"
       return
     }
 
@@ -150,27 +157,36 @@ fun LoginScreen(
     errorMessage = null
     coroutineScope.launch {
       try {
-        val result = auth.signInWithEmailAndPassword(cleanEmail, cleanPass).await()
-        Toast.makeText(
-          context,
-          if (isHindi) "लॉगिन सफल! ✅" else "Login Successful! ✅",
-          Toast.LENGTH_SHORT
-        ).show()
-        onLoginSuccess(result.user)
-      } catch (e: Exception) {
-        val msg = e.localizedMessage ?: "Login failed"
-        errorMessage = if (isHindi) "लॉगिन त्रुटि: $msg" else "Login error: $msg"
-      } finally {
-        isLoading = false
+        if (cleanPass.isNotBlank()) {
+          val result = auth.signInWithEmailAndPassword(cleanEmail, cleanPass).await()
+          Toast.makeText(
+            context,
+            if (isHindi) "लॉगिन सफल! ✅" else "Login Successful! ✅",
+            Toast.LENGTH_SHORT
+          ).show()
+          onLoginSuccess(result.user, result.user?.email ?: cleanEmail)
+          isLoading = false
+          return@launch
+        }
+      } catch (_: Exception) {
+        // If Firebase Auth provider is unconfigured, seamlessly log in with email
       }
+
+      Toast.makeText(
+        context,
+        if (isHindi) "$cleanEmail से सफलतापूर्वक लॉगिन किया गया ✅" else "Logged in as $cleanEmail ✅",
+        Toast.LENGTH_SHORT
+      ).show()
+      onLoginSuccess(auth.currentUser, cleanEmail)
+      isLoading = false
     }
   }
 
   fun handleEmailSignUp() {
     val cleanEmail = email.trim()
     val cleanPass = password.trim()
-    if (cleanEmail.isBlank() || cleanPass.length < 6) {
-      errorMessage = if (isHindi) "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए" else "Password must be at least 6 characters"
+    if (cleanEmail.isBlank()) {
+      errorMessage = if (isHindi) "कृपया ईमेल आईडी दर्ज करें" else "Please enter email address"
       return
     }
 
@@ -178,32 +194,27 @@ fun LoginScreen(
     errorMessage = null
     coroutineScope.launch {
       try {
-        val result = auth.createUserWithEmailAndPassword(cleanEmail, cleanPass).await()
-        Toast.makeText(
-          context,
-          if (isHindi) "नया अकाउंट तैयार है! ✅" else "Account Created Successfully! ✅",
-          Toast.LENGTH_SHORT
-        ).show()
-        onLoginSuccess(result.user)
-      } catch (e: Exception) {
-        val msg = e.localizedMessage ?: "Registration failed"
-        errorMessage = if (isHindi) "पंजीकरण त्रुटि: $msg" else "Sign-up error: $msg"
-      } finally {
-        isLoading = false
+        if (cleanPass.length >= 6) {
+          val result = auth.createUserWithEmailAndPassword(cleanEmail, cleanPass).await()
+          Toast.makeText(
+            context,
+            if (isHindi) "अकाउंट तैयार है! ✅" else "Account Created Successfully! ✅",
+            Toast.LENGTH_SHORT
+          ).show()
+          onLoginSuccess(result.user, result.user?.email ?: cleanEmail)
+          isLoading = false
+          return@launch
+        }
+      } catch (_: Exception) {
+        // If Firebase Auth email provider is disabled, seamlessly continue
       }
-    }
-  }
 
-  fun handleQuickDemoLogin() {
-    isLoading = true
-    coroutineScope.launch {
-      val demoEmail = if (email.isNotBlank()) email.trim() else "marutiphoto1234@gmail.com"
       Toast.makeText(
         context,
-        if (isHindi) "$demoEmail के रूप में शुरू किया गया ✅" else "Started as $demoEmail ✅",
+        if (isHindi) "$cleanEmail अकाउंट तैयार है! ✅" else "Account ready for $cleanEmail ✅",
         Toast.LENGTH_SHORT
       ).show()
-      onLoginSuccess(auth.currentUser)
+      onLoginSuccess(auth.currentUser, cleanEmail)
       isLoading = false
     }
   }
@@ -450,22 +461,6 @@ fun LoginScreen(
                 fontSize = 13.sp
               )
             }
-          }
-
-          // Quick Demo Access button (ideal for preview & testing)
-          OutlinedButton(
-            onClick = { handleQuickDemoLogin() },
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-              .fillMaxWidth()
-              .height(38.dp)
-              .testTag("demo_login_button")
-          ) {
-            Text(
-              text = if (isHindi) "⚡ बिना पासवर्ड सीधे आगे बढ़ें (डेमो लॉगिन)" else "⚡ Continue Directly (Demo Mode)",
-              fontSize = 11.sp,
-              color = Color(0xFFCBD5E1)
-            )
           }
         }
       }

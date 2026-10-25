@@ -68,10 +68,16 @@ class FirestoreSyncManager(
         try {
           fetchInquiriesFromCloudRest()
           syncBookedDatesToCloudRest()
+        } catch (_: kotlinx.coroutines.CancellationException) {
+          break
         } catch (e: Exception) {
           Log.w(TAG, "Polling cycle error: ${e.message}")
         }
-        delay(3500L) // Poll every 3.5 seconds while app is active
+        try {
+          delay(3500L) // Poll every 3.5 seconds while app is active
+        } catch (_: kotlinx.coroutines.CancellationException) {
+          break
+        }
       }
     }
 
@@ -106,7 +112,7 @@ class FirestoreSyncManager(
     var connection: HttpURLConnection? = null
     try {
       val bookedList = dao.getAllDates().filter { it.status == "BOOKED" }.map { it.dateKey }
-      val scheduleUrl = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/$currentStudioSlug/schedule/booked_dates?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc"
+      val scheduleUrl = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/$currentStudioSlug/schedule/booked_dates?updateMask.fieldPaths=dates&updateMask.fieldPaths=updatedAt&key=$apiKey"
       val url = URL(scheduleUrl)
       connection = (url.openConnection() as HttpURLConnection).apply {
         requestMethod = "POST"
@@ -121,12 +127,15 @@ class FirestoreSyncManager(
           put(JSONObject().apply { put("stringValue", d) })
         }
       }
+      val arrayValueObj = JSONObject().apply {
+        if (bookedList.isNotEmpty()) {
+          put("values", arrayValues)
+        }
+      }
       val payload = JSONObject().apply {
         put("fields", JSONObject().apply {
           put("dates", JSONObject().apply {
-            put("arrayValue", JSONObject().apply {
-              put("values", arrayValues)
-            })
+            put("arrayValue", arrayValueObj)
           })
           put("updatedAt", JSONObject().apply {
             put("integerValue", System.currentTimeMillis().toString())
@@ -134,7 +143,8 @@ class FirestoreSyncManager(
         })
       }
       OutputStreamWriter(connection.outputStream, "UTF-8").use { it.write(payload.toString()) }
-      connection.responseCode
+      val code = connection.responseCode
+      Log.d(TAG, "syncBookedDatesToCloudRest code: $code, count: ${bookedList.size}")
     } catch (e: Exception) {
       Log.w(TAG, "Sync booked dates error: ${e.message}")
     } finally {
@@ -338,6 +348,8 @@ class FirestoreSyncManager(
       if (newlyKnownIds.isNotEmpty()) {
         prefs.edit().putStringSet("known_doc_ids", HashSet(knownDocIds)).apply()
       }
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
     } catch (e: Exception) {
       Log.e(TAG, "Failed to parse inquiries JSON: ${e.message}", e)
     }

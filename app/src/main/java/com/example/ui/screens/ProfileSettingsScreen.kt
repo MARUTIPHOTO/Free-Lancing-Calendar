@@ -981,7 +981,7 @@ fun ProfileSettingsScreen(
               color = Color(0xFF991B1B)
             )
             Text(
-              text = if (currentUserEmail.isNotBlank()) currentUserEmail else "marutiphoto1234@gmail.com",
+              text = if (currentUserEmail.isNotBlank()) currentUserEmail else if (isHindi) "सक्रिय खाता" else "Active Account",
               fontSize = 13.sp,
               fontWeight = FontWeight.SemiBold,
               color = Color(0xFF1E293B)

@@ -307,11 +307,16 @@
         // Map: 'YYYY-MM-DD' -> serviceId
         let selectedDatesMap = {};
         // Set of blocked / already booked dates for studio
-        const bookedDates = new Set();
-        let lastWhatsAppMessage = "";
+        let currentStudioSlug = "marutiphoto";
+        let urlFixedDates = [];
 
-        // Firestore REST endpoint for live studio booked dates
-        const FIRESTORE_SCHEDULE_URL = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/marutiphoto/schedule/booked_dates?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc";
+        function getStudioSlug() {
+            return currentStudioSlug || "marutiphoto";
+        }
+
+        function getFirestoreScheduleUrl() {
+            return `https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/${getStudioSlug()}/schedule/booked_dates?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc`;
+        }
 
         // Month Names
         const monthsHi = ["जनवरी", "फ़रवरी", "मार्च", "अप्रैल", "मई", "जून", "जुलाई", "अगस्त", "सितंबर", "अक्टूबर", "नवंबर", "दिसंबर"];
@@ -326,24 +331,42 @@
             try { if (window.lucide) lucide.createIcons(); } catch(e){}
             // Fetch live booked/fixed dates from cloud Firestore
             fetchLiveBookedDates();
-            // Periodic polling every 8 seconds for live calendar updates
-            setInterval(fetchLiveBookedDates, 8000);
+            // Periodic polling every 4 seconds for live calendar updates
+            setInterval(fetchLiveBookedDates, 4000);
         }
 
         async function fetchLiveBookedDates() {
             try {
-                const resp = await fetch(FIRESTORE_SCHEDULE_URL);
+                const resp = await fetch(getFirestoreScheduleUrl());
                 if (resp.ok) {
                     const data = await resp.json();
                     const values = data?.fields?.dates?.arrayValue?.values || [];
-                    let hasNew = false;
+                    const newSet = new Set();
                     values.forEach(v => {
-                        if (v.stringValue && !bookedDates.has(v.stringValue.trim())) {
-                            bookedDates.add(v.stringValue.trim());
-                            hasNew = true;
+                        if (v.stringValue && v.stringValue.trim()) {
+                            newSet.add(v.stringValue.trim());
                         }
                     });
-                    if (hasNew) {
+
+                    // Include any fixed dates passed via URL params
+                    if (urlFixedDates && urlFixedDates.length > 0) {
+                        urlFixedDates.forEach(d => newSet.add(d));
+                    }
+
+                    // Check if different from current bookedDates
+                    let changed = (newSet.size !== bookedDates.size);
+                    if (!changed) {
+                        for (const d of newSet) {
+                            if (!bookedDates.has(d)) {
+                                changed = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (changed) {
+                        bookedDates.clear();
+                        newSet.forEach(d => bookedDates.add(d));
                         renderCalendar();
                     }
                 }
@@ -363,11 +386,14 @@
             try {
                 const params = new URLSearchParams(window.location.search);
                 const datesParam = params.get('dates');
-                const fixedParam = params.get('fixed') || params.get('booked');
-                const studioParam = params.get('studio');
+                const studioParam = params.get('studio') || params.get('id');
 
                 if (studioParam) {
                     STUDIO_INFO.name = decodeURIComponent(studioParam);
+                    const cleanSlug = STUDIO_INFO.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if (cleanSlug) {
+                        currentStudioSlug = cleanSlug;
+                    }
                     const studioEl = document.getElementById('headerStudioName');
                     if (studioEl) {
                         studioEl.innerHTML = `${STUDIO_INFO.name} <span class="text-[10px] bg-emerald-500/90 text-white px-2 py-0.5 rounded-full font-semibold">Verified Studio</span>`;
@@ -376,9 +402,11 @@
 
                 // If explicit fixed/booked dates passed in URL
                 if (fixedParam) {
+                    urlFixedDates = [];
                     fixedParam.split(',').forEach(d => {
                         const trimmed = d.trim();
                         if (trimmed) {
+                            urlFixedDates.push(trimmed);
                             bookedDates.add(trimmed);
                         }
                     });
@@ -747,7 +775,7 @@
             const submissionTimestamp = Date.now();
 
             // 1. Send to Firestore IMMEDIATELY with keepalive: true so it's guaranteed to reach cloud database
-            const firestoreUrl = 'https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/marutiphoto/inquiries?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc';
+            const firestoreUrl = `https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/${getStudioSlug()}/inquiries?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc`;
             const firestorePayload = {
                 fields: {
                     clientName: { stringValue: clientName },

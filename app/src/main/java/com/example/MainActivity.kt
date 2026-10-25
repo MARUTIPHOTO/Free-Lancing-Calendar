@@ -120,20 +120,26 @@ class MainActivity : ComponentActivity() {
           }
         }
 
+        val authPrefs = androidx.compose.runtime.remember {
+          applicationContext.getSharedPreferences("app_auth_session", android.content.Context.MODE_PRIVATE)
+        }
         val auth = androidx.compose.runtime.remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
         var currentUser by androidx.compose.runtime.remember { mutableStateOf(auth.currentUser) }
-        var isDemoLoggedIn by rememberSaveable { mutableStateOf(false) }
+        var savedEmail by rememberSaveable { mutableStateOf(authPrefs.getString("logged_in_email", null)) }
 
-        val activeEmail = currentUser?.email ?: if (isDemoLoggedIn) "marutiphoto1234@gmail.com" else ""
+        val isLoggedIn = (currentUser != null) || !savedEmail.isNullOrBlank()
+        val activeEmail = currentUser?.email ?: savedEmail ?: ""
 
         // Update active email in ViewModel and FirestoreSyncManager
         androidx.compose.runtime.LaunchedEffect(activeEmail) {
-          viewModel.currentUserEmail = activeEmail
-          viewModel.syncManager?.currentStudioSlug = viewModel.getActiveStudioSlug()
+          if (activeEmail.isNotBlank()) {
+            viewModel.currentUserEmail = activeEmail
+            viewModel.syncManager?.currentStudioSlug = viewModel.getActiveStudioSlug()
+          }
         }
 
         // Real-time Firestore sync for incoming online web inquiries
-        androidx.compose.runtime.LaunchedEffect(viewModel.getActiveStudioSlug()) {
+        androidx.compose.runtime.DisposableEffect(viewModel.getActiveStudioSlug()) {
           val syncManager = com.example.data.remote.FirestoreSyncManager(
             context = applicationContext,
             dao = database.studioDao(),
@@ -144,16 +150,23 @@ class MainActivity : ComponentActivity() {
             currentStudioSlug = viewModel.getActiveStudioSlug()
           }
           viewModel.syncManager = syncManager
-          syncManager.startListening(this)
+          val syncJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            syncManager.startListening(this)
+          }
+          onDispose {
+            syncManager.stopListening()
+            syncJob.cancel()
+          }
         }
 
-        if (currentUser == null && !isDemoLoggedIn) {
+        if (!isLoggedIn) {
           LoginScreen(
-            onLoginSuccess = { user ->
+            onLoginSuccess = { user, emailStr ->
               currentUser = user ?: auth.currentUser
-              if (currentUser == null) {
-                isDemoLoggedIn = true
-              }
+              val effectiveEmail = user?.email ?: emailStr.trim()
+              savedEmail = effectiveEmail
+              authPrefs.edit().putString("logged_in_email", effectiveEmail).apply()
+              viewModel.currentUserEmail = effectiveEmail
             },
             isHindi = true
           )
@@ -163,8 +176,9 @@ class MainActivity : ComponentActivity() {
             currentUserEmail = activeEmail,
             onLogout = {
               try { auth.signOut() } catch (e: Exception) {}
+              authPrefs.edit().remove("logged_in_email").apply()
               currentUser = null
-              isDemoLoggedIn = false
+              savedEmail = null
               viewModel.currentUserEmail = ""
             }
           )
