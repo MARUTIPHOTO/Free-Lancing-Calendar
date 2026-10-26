@@ -130,33 +130,8 @@ class MainActivity : ComponentActivity() {
         val isLoggedIn = (currentUser != null) || !savedEmail.isNullOrBlank()
         val activeEmail = currentUser?.email ?: savedEmail ?: ""
 
-        // Update active email in ViewModel and FirestoreSyncManager
-        androidx.compose.runtime.LaunchedEffect(activeEmail) {
-          if (activeEmail.isNotBlank()) {
-            viewModel.currentUserEmail = activeEmail
-            viewModel.syncManager?.currentStudioSlug = viewModel.getActiveStudioSlug()
-          }
-        }
-
-        // Real-time Firestore sync for incoming online web inquiries
-        androidx.compose.runtime.DisposableEffect(viewModel.getActiveStudioSlug()) {
-          val syncManager = com.example.data.remote.FirestoreSyncManager(
-            context = applicationContext,
-            dao = database.studioDao(),
-            onNewInquiryNotification = { newInquiry ->
-              viewModel.showIncomingInquiryNotification(newInquiry)
-            }
-          ).apply {
-            currentStudioSlug = viewModel.getActiveStudioSlug()
-          }
-          viewModel.syncManager = syncManager
-          val syncJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-            syncManager.startListening(this)
-          }
-          onDispose {
-            syncManager.stopListening()
-            syncJob.cancel()
-          }
+        if (activeEmail.isNotBlank() && viewModel.currentUserEmail != activeEmail) {
+          viewModel.currentUserEmail = activeEmail
         }
 
         if (!isLoggedIn) {
@@ -167,16 +142,50 @@ class MainActivity : ComponentActivity() {
               savedEmail = effectiveEmail
               authPrefs.edit().putString("logged_in_email", effectiveEmail).apply()
               viewModel.currentUserEmail = effectiveEmail
+              val slug = viewModel.getActiveStudioSlug()
+              com.example.util.FcmTopicManager.fetchAndSyncFcmToken(applicationContext, slug)
             },
             isHindi = true
           )
         } else {
+          // Real-time Firestore sync & FCM topic subscription ONLY when logged in, for this photographer's private studio
+          val activeStudioSlug = viewModel.getActiveStudioSlug()
+
+          androidx.compose.runtime.DisposableEffect(activeStudioSlug) {
+            // Subscribe device to FCM topic for this photographer's studio slug
+            com.example.util.FcmTopicManager.subscribeToStudioTopic(applicationContext, activeStudioSlug)
+
+            // Start listening for new document creation in the specific 'inquiries' collection
+            com.example.service.MyFirebaseMessagingService.startListeningForInquiries(applicationContext, activeStudioSlug)
+
+            val syncManager = com.example.data.remote.FirestoreSyncManager(
+              context = applicationContext,
+              dao = database.studioDao(),
+              onNewInquiryNotification = { newInquiry ->
+                viewModel.showIncomingInquiryNotification(newInquiry)
+              }
+            ).apply {
+              currentStudioSlug = activeStudioSlug
+            }
+            viewModel.syncManager = syncManager
+            val syncJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+              syncManager.startListening(this)
+            }
+            onDispose {
+              com.example.service.MyFirebaseMessagingService.stopListeningForInquiries()
+              syncManager.stopListening()
+              syncJob.cancel()
+              viewModel.syncManager = null
+            }
+          }
+
           MainAppContent(
             viewModel = viewModel,
             currentUserEmail = activeEmail,
             onLogout = {
               try { auth.signOut() } catch (e: Exception) {}
               authPrefs.edit().remove("logged_in_email").apply()
+              com.example.util.FcmTopicManager.unsubscribeCurrentTopic(applicationContext)
               currentUser = null
               savedEmail = null
               viewModel.currentUserEmail = ""

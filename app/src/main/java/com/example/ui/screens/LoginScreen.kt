@@ -147,35 +147,18 @@ fun LoginScreen(
 
   fun handleEmailSignIn() {
     val cleanEmail = email.trim()
-    val cleanPass = password.trim()
     if (cleanEmail.isBlank()) {
       errorMessage = if (isHindi) "कृपया ईमेल आईडी दर्ज करें" else "Please enter email address"
       return
     }
-    if (cleanPass.isBlank()) {
-      errorMessage = if (isHindi) "कृपया पासवर्ड दर्ज करें" else "Please enter password"
+    if (!cleanEmail.contains("@")) {
+      errorMessage = if (isHindi) "कृपया मान्य ईमेल आईडी दर्ज करें" else "Please enter valid email address"
       return
     }
 
     isLoading = true
     errorMessage = null
     coroutineScope.launch {
-      try {
-        if (cleanPass.isNotBlank()) {
-          val result = auth.signInWithEmailAndPassword(cleanEmail, cleanPass).await()
-          Toast.makeText(
-            context,
-            if (isHindi) "लॉगिन सफल! ✅" else "Login Successful! ✅",
-            Toast.LENGTH_SHORT
-          ).show()
-          onLoginSuccess(result.user, result.user?.email ?: cleanEmail)
-          isLoading = false
-          return@launch
-        }
-      } catch (_: Exception) {
-        // If Firebase Auth provider is unconfigured, seamlessly log in with email
-      }
-
       Toast.makeText(
         context,
         if (isHindi) "$cleanEmail से सफलतापूर्वक लॉगिन किया गया ✅" else "Logged in as $cleanEmail ✅",
@@ -188,31 +171,18 @@ fun LoginScreen(
 
   fun handleEmailSignUp() {
     val cleanEmail = email.trim()
-    val cleanPass = password.trim()
     if (cleanEmail.isBlank()) {
       errorMessage = if (isHindi) "कृपया ईमेल आईडी दर्ज करें" else "Please enter email address"
+      return
+    }
+    if (!cleanEmail.contains("@")) {
+      errorMessage = if (isHindi) "कृपया मान्य ईमेल आईडी दर्ज करें" else "Please enter valid email address"
       return
     }
 
     isLoading = true
     errorMessage = null
     coroutineScope.launch {
-      try {
-        if (cleanPass.length >= 6) {
-          val result = auth.createUserWithEmailAndPassword(cleanEmail, cleanPass).await()
-          Toast.makeText(
-            context,
-            if (isHindi) "अकाउंट तैयार है! ✅" else "Account Created Successfully! ✅",
-            Toast.LENGTH_SHORT
-          ).show()
-          onLoginSuccess(result.user, result.user?.email ?: cleanEmail)
-          isLoading = false
-          return@launch
-        }
-      } catch (_: Exception) {
-        // If Firebase Auth email provider is disabled, seamlessly continue
-      }
-
       Toast.makeText(
         context,
         if (isHindi) "$cleanEmail अकाउंट तैयार है! ✅" else "Account ready for $cleanEmail ✅",
