@@ -787,9 +787,8 @@
             const total = calculateTotalBudget();
             const submissionTimestamp = Date.now();
 
-            // 1. Send to Firestore IMMEDIATELY to this photographer's private studio collection
+            // 1. Send to Firestore IMMEDIATELY ONLY to the photographer's private studio collection
             const targetSlug = getStudioSlug();
-            const firestoreUrl = `https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/${targetSlug}/inquiries?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc`;
             const firestorePayload = {
                 fields: {
                     clientName: { stringValue: clientName },
@@ -804,6 +803,7 @@
                 }
             };
 
+            const firestoreUrl = `https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/${targetSlug}/inquiries?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc`;
             try {
                 fetch(firestoreUrl, {
                     method: 'POST',

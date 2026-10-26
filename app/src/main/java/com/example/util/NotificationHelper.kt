@@ -16,7 +16,7 @@ import com.example.MainActivity
 import com.example.data.local.InquiryEntity
 
 object NotificationHelper {
-  const val CHANNEL_ID = "maruti_booking_alerts_v7"
+  const val CHANNEL_ID = "maruti_booking_alerts_v8"
   const val CHANNEL_NAME = "Booking Alerts (संदेश टोन अलर्ट)"
 
   fun createNotificationChannel(context: Context) {
@@ -26,6 +26,7 @@ object NotificationHelper {
 
       // Delete older channels if present to ensure high importance and sound are fresh
       try {
+        notificationManager?.deleteNotificationChannel("maruti_booking_alerts_v7")
         notificationManager?.deleteNotificationChannel("maruti_booking_alerts_v6")
         notificationManager?.deleteNotificationChannel("maruti_booking_msg_tone_v5")
         notificationManager?.deleteNotificationChannel("maruti_booking_inquiries")
@@ -124,14 +125,23 @@ object NotificationHelper {
         NotificationManagerCompat.from(context).notify(notifId, notification)
       }
 
-      // Play device notification sound directly to guarantee audible alert
+      // 1. Play immediate ToneGenerator beep to ensure sound is heard on any device
       try {
-        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        val ringtone = RingtoneManager.getRingtone(context.applicationContext, soundUri)
-        ringtone?.play()
+        val toneGen = android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 100)
+        toneGen.startTone(android.media.ToneGenerator.TONE_PROP_BEEP2, 600)
       } catch (_: Exception) {}
 
-      // Trigger dual vibration pulse
+      // 2. Play device notification ringtone
+      try {
+        val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+          ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+        if (soundUri != null) {
+          val ringtone = RingtoneManager.getRingtone(context.applicationContext, soundUri)
+          ringtone?.play()
+        }
+      } catch (_: Exception) {}
+
+      // 3. Trigger dual vibration pulse
       try {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
           val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? android.os.VibratorManager

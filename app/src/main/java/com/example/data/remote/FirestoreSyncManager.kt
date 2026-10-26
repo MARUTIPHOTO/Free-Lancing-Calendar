@@ -48,12 +48,10 @@ class FirestoreSyncManager(
 
   fun getTargetStudioSlugs(): Set<String> {
     val trimmed = currentStudioSlug.trim().lowercase()
-    return if (trimmed.isNotBlank()) {
-      setOf(trimmed)
-    } else {
-      setOf("marutiphoto")
-    }
+    return if (trimmed.isNotBlank()) setOf(trimmed) else setOf("marutiphoto")
   }
+
+  private val notifiedDocIds = java.util.Collections.synchronizedSet(HashSet<String>())
 
   private fun getQueryUrl(slug: String): String {
     return "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/$databaseId/documents/studios/$slug:runQuery?key=$apiKey"
@@ -372,14 +370,27 @@ class FirestoreSyncManager(
           }
 
           // Trigger notification for new pending inquiries (within 48h or after first sync)
+          val isAlreadyNotified = notifiedDocIds.contains(docId)
           val isRecent = (System.currentTimeMillis() - createdAt) < (48 * 60 * 60 * 1000L)
-          val shouldNotify = status == "PENDING" && !isAlreadyKnown && (!isFirstRun || isRecent)
+          val shouldNotify = status == "PENDING" && !isAlreadyNotified && isRecent
 
           if (shouldNotify) {
+            notifiedDocIds.add(docId)
             Log.d(TAG, "New incoming inquiry detected! Showing notification for: $clientName ($clientPhone)")
             NotificationHelper.showInquiryNotification(context, savedInquiry, isBookedConflict = isAnyDateBooked)
             withContext(Dispatchers.Main) {
               onNewInquiryNotification(savedInquiry)
+            }
+          }
+        } else if (existingInDb != null && !existingInDb.isRead) {
+          val isAlreadyNotified = notifiedDocIds.contains(docId)
+          val isRecent = (System.currentTimeMillis() - createdAt) < (48 * 60 * 60 * 1000L)
+          if (status == "PENDING" && !isAlreadyNotified && isRecent) {
+            notifiedDocIds.add(docId)
+            Log.d(TAG, "Unread incoming inquiry detected! Showing notification for: ${existingInDb.clientName} (${existingInDb.clientPhone})")
+            NotificationHelper.showInquiryNotification(context, existingInDb, isBookedConflict = false)
+            withContext(Dispatchers.Main) {
+              onNewInquiryNotification(existingInDb)
             }
           }
         }
