@@ -33,15 +33,26 @@ class FirestoreSyncManager(
   private val TAG = "FirestoreSyncManager"
   private val databaseId = "ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c"
   private val apiKey = "AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc"
+  private var activeScope: CoroutineScope? = null
+
   var currentStudioSlug: String = "marutiphoto"
+    set(value) {
+      val trimmed = value.trim().lowercase()
+      if (trimmed.isNotBlank() && field != trimmed) {
+        field = trimmed
+        activeScope?.let { scope ->
+          startListening(scope)
+        }
+      }
+    }
 
   fun getTargetStudioSlugs(): Set<String> {
-    val slugs = linkedSetOf<String>()
-    val trimmed = currentStudioSlug.trim()
-    if (trimmed.isNotBlank()) slugs.add(trimmed)
-    slugs.add("marutiphoto")
-    slugs.add("freelancingcalendar")
-    return slugs
+    val trimmed = currentStudioSlug.trim().lowercase()
+    return if (trimmed.isNotBlank()) {
+      setOf(trimmed)
+    } else {
+      setOf("marutiphoto")
+    }
   }
 
   private fun getQueryUrl(slug: String): String {
@@ -72,6 +83,7 @@ class FirestoreSyncManager(
   }
 
   fun startListening(scope: CoroutineScope) {
+    activeScope = scope
     // 1. Start continuous periodic REST sync (reliable across all Android devices)
     pollingJob?.cancel()
     pollingJob = scope.launch(Dispatchers.IO) {

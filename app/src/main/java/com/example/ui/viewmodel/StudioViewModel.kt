@@ -376,7 +376,11 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
   fun openMultiDateShareDialog() {
     val dates = _selectedMultiDateKeys.value.toList()
     if (dates.isEmpty()) return
-    val msg = repository.formatMultiDateShareMessage(dates, uiState.value.profile)
+    val msg = repository.formatMultiDateShareMessage(
+      dateKeys = dates,
+      profile = uiState.value.profile,
+      studioSlugOverride = getActiveStudioSlug()
+    )
     _customShareMessage.value = msg
     _shareDialogDateKey.value = dates.firstOrNull()
     _showShareDialog.value = true
@@ -643,7 +647,8 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     return repository.formatShareMessage(
       dateKey = dateKey,
       clientName = clientName,
-      profile = uiState.value.profile
+      profile = uiState.value.profile,
+      studioSlugOverride = getActiveStudioSlug()
     )
   }
 
@@ -652,10 +657,11 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
   fun getActiveStudioSlug(): String {
     val email = currentUserEmail.trim()
     return if (email.isNotBlank()) {
-      val prefix = email.substringBefore("@").filter { it.isLetterOrDigit() }
-      if (prefix.isNotBlank()) prefix else uiState.value.profile.studioName
+      val prefix = email.substringBefore("@").filter { it.isLetterOrDigit() }.lowercase()
+      if (prefix.isNotBlank()) prefix else uiState.value.profile.studioName.filter { it.isLetterOrDigit() }.lowercase()
     } else {
-      uiState.value.profile.studioName
+      val fallback = uiState.value.profile.studioName.filter { it.isLetterOrDigit() }.lowercase()
+      if (fallback.isNotBlank()) fallback else "marutiphoto"
     }
   }
 
@@ -671,7 +677,11 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
 
   fun getWhatsAppShareMessageForSelectedDates(): String {
     val dates = _selectedMultiDateKeys.value.toList()
-    return repository.formatMultiDateShareMessage(dates, uiState.value.profile)
+    return repository.formatMultiDateShareMessage(
+      dateKeys = dates,
+      profile = uiState.value.profile,
+      studioSlugOverride = getActiveStudioSlug()
+    )
   }
 
   fun getBookingLinkForSelectedDates(): String {

@@ -519,12 +519,14 @@ class StudioRepository(private val dao: StudioDao) {
   fun formatMultiDateShareMessage(
     dateKeys: List<String>,
     profile: StudioProfileEntity,
-    clientGreeting: String = ""
+    clientGreeting: String = "",
+    studioSlugOverride: String = ""
   ): String {
     val isHindi = profile.selectedLanguage == "HI" || profile.selectedLanguage == "GU"
     val greeting = if (clientGreeting.isNotBlank()) clientGreeting else if (isHindi) "नमस्ते स्टूडियो ओनर्स & क्लाइंट्स! 🙏" else "Hello Studio Owners & Clients! 🙏"
     val formattedDates = dateKeys.sorted().joinToString("\n• ")
-    val link = generateBookingLink(dateKeys, profile.studioName)
+    val targetSlug = if (studioSlugOverride.isNotBlank()) studioSlugOverride else profile.studioName
+    val link = generateBookingLink(dateKeys, targetSlug)
 
     return if (isHindi) {
       """$greeting
@@ -563,7 +565,8 @@ $link"""
     dateKey: String,
     clientName: String = "",
     profile: StudioProfileEntity,
-    customOverrideTemplate: String = ""
+    customOverrideTemplate: String = "",
+    studioSlugOverride: String = ""
   ): String {
     val isHindi = profile.selectedLanguage == "HI" || profile.selectedLanguage == "GU"
     val template = if (customOverrideTemplate.isNotBlank()) {
@@ -574,7 +577,8 @@ $link"""
       profile.customTemplateEn
     }
 
-    val bookingLink = generateBookingLink(dateKey, profile.studioName)
+    val targetSlug = if (studioSlugOverride.isNotBlank()) studioSlugOverride else profile.studioName
+    val bookingLink = generateBookingLink(dateKey, targetSlug)
     val clientGreeting = if (clientName.isNotBlank()) clientName else if (isHindi) "प्रिय मित्र" else "Valued Client"
 
     return template

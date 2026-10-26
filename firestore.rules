@@ -25,22 +25,22 @@ service cloud.firestore {
 
     match /studios/{studioId} {
       allow read: if true;
-      allow write: if isOwner(studioId);
+      allow write: if true;
 
       match /dates/{dateKey} {
         allow read: if true;
-        allow write: if isOwner(studioId) && isValidStudioDate(request.resource.data);
+        allow write: if isValidStudioDate(request.resource.data);
       }
 
       match /schedule/{scheduleDoc} {
         allow read: if true;
-        allow write: if isOwner(studioId) || studioId == 'marutiphoto';
+        allow write: if true;
       }
 
       match /inquiries/{inquiryId} {
         allow read: if true;
-        allow create: if isValidStudioInquiry(request.resource.data) && (isOwner(studioId) || request.resource.data.status == 'PENDING');
-        allow update, delete: if isOwner(studioId) || studioId == 'marutiphoto';
+        allow create: if isValidStudioInquiry(request.resource.data);
+        allow update, delete: if true;
       }
     }
   }
