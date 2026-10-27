@@ -52,14 +52,6 @@ class FreeLancingFirebaseMessagingService : FirebaseMessagingService() {
     val notes = data["notes"]?.trim() ?: notification?.body?.trim() ?: ""
     val eventType = data["eventType"]?.trim() ?: "Online Inquiry"
 
-    // If phone is in declined list, ignore
-    val syncPrefs = applicationContext.getSharedPreferences("firestore_sync_prefs", Context.MODE_PRIVATE)
-    val declinedPhones = syncPrefs.getStringSet("declined_phones", emptySet()) ?: emptySet()
-    if (clientPhone.isNotBlank() && declinedPhones.contains(clientPhone)) {
-      Log.d(TAG, "Ignoring FCM inquiry for declined phone: $clientPhone")
-      return
-    }
-
     CoroutineScope(Dispatchers.IO).launch {
       try {
         val database = StudioDatabase.getDatabase(applicationContext)

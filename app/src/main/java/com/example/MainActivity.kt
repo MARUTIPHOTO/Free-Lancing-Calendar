@@ -71,6 +71,19 @@ import com.example.ui.components.AppOpenAdDialog
 import com.google.android.gms.ads.MobileAds
 
 class MainActivity : ComponentActivity() {
+
+  private val persistentSyncScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.SupervisorJob())
+  private var globalSyncManagerRef: com.example.data.remote.FirestoreSyncManager? = null
+
+  override fun onResume() {
+    super.onResume()
+    persistentSyncScope.launch {
+      try {
+        globalSyncManagerRef?.manualRefresh()
+      } catch (_: Exception) {}
+    }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
@@ -99,9 +112,21 @@ class MainActivity : ComponentActivity() {
     val repository = StudioRepository(database.studioDao())
     val factory = StudioViewModelFactory(repository)
 
+    // Start background sync immediately from app launch
+    val syncManager = com.example.data.remote.FirestoreSyncManager(
+      context = applicationContext,
+      dao = database.studioDao(),
+      onNewInquiryNotification = { /* Handled in viewModel */ }
+    ).apply {
+      currentStudioSlug = "marutiphoto1234"
+    }
+    globalSyncManagerRef = syncManager
+    syncManager.startListening(persistentSyncScope)
+
     setContent {
       MyApplicationTheme {
         val viewModel: StudioViewModel = viewModel(factory = factory)
+        viewModel.syncManager = syncManager
 
         // Request Notification Permission on Android 13+ (API 33+)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -148,35 +173,12 @@ class MainActivity : ComponentActivity() {
             isHindi = true
           )
         } else {
-          // Real-time Firestore sync & FCM topic subscription ONLY when logged in, for this photographer's private studio
           val activeStudioSlug = viewModel.getActiveStudioSlug()
 
-          androidx.compose.runtime.DisposableEffect(activeStudioSlug) {
-            // Subscribe device to FCM topic for this photographer's studio slug
+          androidx.compose.runtime.LaunchedEffect(activeStudioSlug) {
+            syncManager.currentStudioSlug = activeStudioSlug
             com.example.util.FcmTopicManager.subscribeToStudioTopic(applicationContext, activeStudioSlug)
-
-            // Start listening for new document creation in the specific 'inquiries' collection
             com.example.service.MyFirebaseMessagingService.startListeningForInquiries(applicationContext, activeStudioSlug)
-
-            val syncManager = com.example.data.remote.FirestoreSyncManager(
-              context = applicationContext,
-              dao = database.studioDao(),
-              onNewInquiryNotification = { newInquiry ->
-                viewModel.showIncomingInquiryNotification(newInquiry)
-              }
-            ).apply {
-              currentStudioSlug = activeStudioSlug
-            }
-            viewModel.syncManager = syncManager
-            val syncJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-              syncManager.startListening(this)
-            }
-            onDispose {
-              com.example.service.MyFirebaseMessagingService.stopListeningForInquiries()
-              syncManager.stopListening()
-              syncJob.cancel()
-              viewModel.syncManager = null
-            }
           }
 
           MainAppContent(

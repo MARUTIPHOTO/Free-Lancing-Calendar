@@ -274,8 +274,8 @@ class FirestoreSyncManager(
         val clientPhone = fields.optJSONObject("clientPhone")?.optString("stringValue")?.trim() ?: ""
         val status = fields.optJSONObject("status")?.optString("stringValue") ?: "PENDING"
 
-        // If this inquiry was Unaccepted (Declined), NEVER re-insert it and NEVER notify!
-        if (clientPhone.isBlank() || declinedPhones.contains(clientPhone) || status == "DECLINED") {
+        // Only skip if phone is blank or status is explicitly DECLINED in Firestore
+        if (clientPhone.isBlank() || status == "DECLINED") {
           newlyKnownIds.add(docId)
           knownDocIds.add(docId)
           continue
