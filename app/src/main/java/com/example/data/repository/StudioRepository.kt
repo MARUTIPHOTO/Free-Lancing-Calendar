@@ -390,13 +390,10 @@ class StudioRepository(private val dao: StudioDao) {
   }
 
   fun generateBookingLink(dateKeys: List<String>, studioName: String): String {
-    val encodedStudio = try {
-      URLEncoder.encode(studioName, StandardCharsets.UTF_8.toString())
-    } catch (e: Exception) {
-      "MarutiStudio"
-    }
+    val clean = studioName.filter { it.isLetterOrDigit() || it == '_' }.lowercase()
+    val effectiveSlug = if (clean.isNotBlank() && clean != "freelancingcalendar") clean else "marutiphoto1234"
     val datesParam = if (dateKeys.isEmpty()) "" else dateKeys.sorted().joinToString(",")
-    return "https://marutiphoto.github.io/Free-Lancing-Calendar/public/?dates=$datesParam&studio=$encodedStudio"
+    return "https://marutiphoto.github.io/Free-Lancing-Calendar/public/?dates=$datesParam&studio=$effectiveSlug"
   }
 
   fun generateBookingLink(dateKey: String, studioName: String): String {

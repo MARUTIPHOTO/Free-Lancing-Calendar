@@ -658,10 +658,9 @@ class StudioViewModel(private val repository: StudioRepository) : ViewModel() {
     val email = currentUserEmail.trim()
     return if (email.isNotBlank()) {
       val prefix = email.substringBefore("@").filter { it.isLetterOrDigit() }.lowercase()
-      if (prefix.isNotBlank()) prefix else uiState.value.profile.studioName.filter { it.isLetterOrDigit() }.lowercase()
+      if (prefix.isNotBlank()) prefix else "marutiphoto1234"
     } else {
-      val fallback = uiState.value.profile.studioName.filter { it.isLetterOrDigit() }.lowercase()
-      if (fallback.isNotBlank()) fallback else "marutiphoto"
+      "marutiphoto1234"
     }
   }
 
