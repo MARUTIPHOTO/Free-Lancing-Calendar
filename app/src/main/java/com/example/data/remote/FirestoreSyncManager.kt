@@ -49,7 +49,11 @@ class FirestoreSyncManager(
 
   fun getTargetStudioSlugs(): Set<String> {
     val trimmed = currentStudioSlug.trim().lowercase()
-    return if (trimmed.isNotBlank()) setOf(trimmed) else setOf("marutiphoto")
+    val set = mutableSetOf<String>()
+    if (trimmed.isNotBlank()) set.add(trimmed)
+    set.add("marutiphoto")
+    set.add("marutiphoto1234")
+    return set
   }
 
   private val notifiedDocIds = java.util.Collections.synchronizedSet(HashSet<String>())

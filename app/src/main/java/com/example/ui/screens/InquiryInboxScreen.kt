@@ -146,7 +146,7 @@ fun InquiryInboxScreen(
       IconButton(
         onClick = {
           val testInquiry = InquiryEntity(
-            id = System.currentTimeMillis(),
+            id = 0,
             dateKey = "2026-11-20",
             clientName = "Rajesh Patel (टेस्ट क्लाइंट)",
             clientPhone = "9876543210",
@@ -157,8 +157,17 @@ fun InquiryInboxScreen(
             isRead = false,
             createdAt = System.currentTimeMillis()
           )
-          com.example.util.NotificationHelper.showInquiryNotification(context, testInquiry)
-          Toast.makeText(context, "🔔 नोटिफिकेशन भेजा गया! ऊपर स्टेटस बार चेक करें।", Toast.LENGTH_SHORT).show()
+          coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val database = com.example.data.local.StudioDatabase.getDatabase(context)
+            val insertedId = database.studioDao().insertInquiry(testInquiry)
+            val saved = testInquiry.copy(id = insertedId)
+            com.example.util.NotificationHelper.showInquiryNotification(context, saved)
+          }
+          Toast.makeText(
+            context,
+            if (isHindi) "🔔 पूछताछ इनबॉक्स में जोड़ी गई और नोटिफिकेशन भेजा गया!" else "🔔 Inquiry added to inbox & notification sent!",
+            Toast.LENGTH_SHORT
+          ).show()
         },
         modifier = Modifier.size(36.dp)
       ) {

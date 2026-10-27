@@ -117,25 +117,42 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
 
         val existingInquiries = dao.getAllInquiriesFlow().first()
-        val alreadyExists = existingInquiries.any {
-          it.clientPhone.trim() == clientPhone && it.dateKey.trim() == dates
+        val existingInDb = existingInquiries.find {
+          it.clientPhone.trim() == clientPhone.trim() && it.dateKey.trim() == dates.trim()
         }
 
-        val id = if (!alreadyExists) {
-          val entity = InquiryEntity(
-            dateKey = dates,
-            clientName = clientName,
-            clientPhone = clientPhone,
-            eventType = eventType,
-            location = location,
-            notes = notes,
-            isConfirmed = false,
-            isRead = false,
-            createdAt = System.currentTimeMillis()
-          )
-          dao.insertInquiry(entity)
-        } else {
-          existingInquiries.first { it.clientPhone.trim() == clientPhone && it.dateKey.trim() == dates }.id
+        val entity = InquiryEntity(
+          id = existingInDb?.id ?: 0,
+          dateKey = dates,
+          clientName = clientName,
+          clientPhone = clientPhone,
+          eventType = eventType,
+          location = location,
+          notes = notes,
+          isConfirmed = false,
+          isRead = false,
+          createdAt = existingInDb?.createdAt ?: System.currentTimeMillis()
+        )
+        val id = dao.insertInquiry(entity)
+
+        // Reflect as INQUIRY (Yellow) on calendar if date is unbooked
+        if (!isAnyDateBooked && parsedDates.isNotEmpty()) {
+          for (d in parsedDates) {
+            val existingDate = dao.getDate(d)
+            if (existingDate == null || existingDate.status != "BOOKED") {
+              dao.upsertDate(
+                (existingDate ?: com.example.data.local.StudioDateEntity(dateKey = d)).copy(
+                  status = "INQUIRY",
+                  clientName = clientName.ifBlank { "Client ($clientPhone)" },
+                  clientPhone = clientPhone,
+                  eventType = eventType,
+                  location = location,
+                  customNote = if (notes.isNotBlank()) notes else "Online Web Inquiry",
+                  updatedAt = System.currentTimeMillis()
+                )
+              )
+            }
+          }
         }
 
         val inquiryToNotify = InquiryEntity(
