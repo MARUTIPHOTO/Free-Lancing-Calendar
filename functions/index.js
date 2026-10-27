@@ -11,7 +11,7 @@ admin.initializeApp();
 exports.onInquiryCreated = onDocumentCreated(
   {
     document: "studios/{studioSlug}/inquiries/{inquiryId}",
-    database: "ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c"
+    database: "(default)"
   },
   async (event) => {
     const snapshot = event.data;

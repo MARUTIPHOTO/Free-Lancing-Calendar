@@ -21,7 +21,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
   companion object {
     private const val TAG = "MyFCMService"
-    private const val DATABASE_ID = "ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c"
+    private const val DATABASE_ID = "(default)"
     private var inquiriesListenerRegistration: ListenerRegistration? = null
     private val notifiedIds = java.util.Collections.synchronizedSet(HashSet<String>())
 

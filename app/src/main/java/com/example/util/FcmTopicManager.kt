@@ -19,8 +19,9 @@ object FcmTopicManager {
   private const val PREFS_NAME = "fcm_topic_prefs"
   private const val KEY_CURRENT_TOPIC = "current_subscribed_topic"
   private const val KEY_CACHED_TOKEN = "cached_fcm_token"
-  private const val DATABASE_ID = "ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c"
-  private const val API_KEY = "AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc"
+  private const val PROJECT_ID = "free-lancing-calendar"
+  private const val DATABASE_ID = "(default)"
+  private const val API_KEY = "AIzaSyCZ7J5z4rh82JfsQ1_UHtrRc2vhHzCCmAE"
 
   fun getTopicName(studioSlug: String): String {
     val clean = studioSlug.filter { it.isLetterOrDigit() || it == '_' || it == '-' }.lowercase()
@@ -129,7 +130,7 @@ object FcmTopicManager {
     // 2. Also save via REST API PATCH to guarantee it is saved even if SDK connection is pending
     CoroutineScope(Dispatchers.IO).launch {
       try {
-        val restUrl = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/$DATABASE_ID/documents/studios/$cleanSlug/profile/fcmToken?updateMask.fieldPaths=token&updateMask.fieldPaths=fcmToken&updateMask.fieldPaths=studioId&updateMask.fieldPaths=updatedAt&updateMask.fieldPaths=platform&key=$API_KEY"
+        val restUrl = "https://firestore.googleapis.com/v1/projects/$PROJECT_ID/databases/$DATABASE_ID/documents/studios/$cleanSlug/profile/fcmToken?updateMask.fieldPaths=token&updateMask.fieldPaths=fcmToken&updateMask.fieldPaths=studioId&updateMask.fieldPaths=updatedAt&updateMask.fieldPaths=platform&key=$API_KEY"
         val connection = (URL(restUrl).openConnection() as HttpURLConnection).apply {
           requestMethod = "POST"
           setRequestProperty("X-HTTP-Method-Override", "PATCH")

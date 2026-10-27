@@ -31,8 +31,9 @@ class FirestoreSyncManager(
   private val onNewInquiryNotification: (InquiryEntity) -> Unit
 ) {
   private val TAG = "FirestoreSyncManager"
-  private val databaseId = "ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c"
-  private val apiKey = "AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc"
+  private val projectId = "free-lancing-calendar"
+  private val databaseId = "(default)"
+  private val apiKey = "AIzaSyCZ7J5z4rh82JfsQ1_UHtrRc2vhHzCCmAE"
   private var activeScope: CoroutineScope? = null
 
   var currentStudioSlug: String = "marutiphoto"
@@ -54,7 +55,7 @@ class FirestoreSyncManager(
   private val notifiedDocIds = java.util.Collections.synchronizedSet(HashSet<String>())
 
   private fun getQueryUrl(slug: String): String {
-    return "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/$databaseId/documents/studios/$slug:runQuery?key=$apiKey"
+    return "https://firestore.googleapis.com/v1/projects/$projectId/databases/$databaseId/documents/studios/$slug:runQuery?key=$apiKey"
   }
 
   private val listenerRegistrations = mutableListOf<ListenerRegistration>()
@@ -151,7 +152,7 @@ class FirestoreSyncManager(
   private fun syncBookedDatesForSlug(slug: String, bookedList: List<String>) {
     var connection: HttpURLConnection? = null
     try {
-      val scheduleUrl = "https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/$databaseId/documents/studios/$slug/schedule/booked_dates?updateMask.fieldPaths=dates&updateMask.fieldPaths=updatedAt&key=$apiKey"
+      val scheduleUrl = "https://firestore.googleapis.com/v1/projects/$projectId/databases/$databaseId/documents/studios/$slug/schedule/booked_dates?updateMask.fieldPaths=dates&updateMask.fieldPaths=updatedAt&key=$apiKey"
       val url = URL(scheduleUrl)
       connection = (url.openConnection() as HttpURLConnection).apply {
         requestMethod = "POST"

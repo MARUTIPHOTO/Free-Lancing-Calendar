@@ -327,7 +327,7 @@
         }
 
         function getFirestoreScheduleUrl() {
-            return `https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/${getStudioSlug()}/schedule/booked_dates?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc`;
+            return `https://firestore.googleapis.com/v1/projects/free-lancing-calendar/databases/(default)/documents/studios/${getStudioSlug()}/schedule/booked_dates?key=AIzaSyCZ7J5z4rh82JfsQ1_UHtrRc2vhHzCCmAE`;
         }
 
         // Month Names
@@ -803,7 +803,7 @@
                 }
             };
 
-            const firestoreUrl = `https://firestore.googleapis.com/v1/projects/gen-lang-client-0524337453/databases/ai-studio-android-freelanc-c2b7a674-802c-47dd-bb5b-f701d2a4253c/documents/studios/${targetSlug}/inquiries?key=AIzaSyCf-_qYg-yQgKt7NPCCwAdxz-3JWOyFbgc`;
+            const firestoreUrl = `https://firestore.googleapis.com/v1/projects/free-lancing-calendar/databases/(default)/documents/studios/${targetSlug}/inquiries?key=AIzaSyCZ7J5z4rh82JfsQ1_UHtrRc2vhHzCCmAE`;
             try {
                 fetch(firestoreUrl, {
                     method: 'POST',
