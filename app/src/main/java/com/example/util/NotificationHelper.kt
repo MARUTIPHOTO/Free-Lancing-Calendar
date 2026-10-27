@@ -125,13 +125,7 @@ object NotificationHelper {
         NotificationManagerCompat.from(context).notify(notifId, notification)
       }
 
-      // 1. Play immediate ToneGenerator beep to ensure sound is heard on any device
-      try {
-        val toneGen = android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 100)
-        toneGen.startTone(android.media.ToneGenerator.TONE_PROP_BEEP2, 600)
-      } catch (_: Exception) {}
-
-      // 2. Play device notification ringtone
+      // Play device notification ringtone
       try {
         val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
           ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
