@@ -38,39 +38,27 @@ object FcmTopicManager {
     // Fetch & store device FCM token into /studios/{studioId}/profile/fcmToken
     fetchAndSyncFcmToken(context, studioSlug)
 
-    // If already subscribed to this exact topic, don't re-subscribe unnecessarily
-    if (lastTopic == newTopic) {
-      Log.d(TAG, "Already subscribed to FCM topic: $newTopic")
-      return
+    val topicsToSubscribe = mutableSetOf(newTopic)
+    if (newTopic == "studio_marutiphoto1234" || newTopic == "studio_marutiphoto") {
+      topicsToSubscribe.add("studio_marutiphoto1234")
+      topicsToSubscribe.add("studio_marutiphoto")
+      topicsToSubscribe.add("studio_freelancingcalendar")
     }
 
-    // Unsubscribe from previous studio topic if switched
-    if (!lastTopic.isNullOrBlank()) {
+    for (topic in topicsToSubscribe) {
       try {
-        FirebaseMessaging.getInstance().unsubscribeFromTopic(lastTopic)
+        FirebaseMessaging.getInstance().subscribeToTopic(topic)
           .addOnCompleteListener { task ->
             if (task.isSuccessful) {
-              Log.d(TAG, "Successfully unsubscribed from old FCM topic: $lastTopic")
+              prefs.edit().putString(KEY_CURRENT_TOPIC, newTopic).apply()
+              Log.d(TAG, "Successfully subscribed to FCM topic: $topic")
+            } else {
+              Log.e(TAG, "Failed to subscribe to FCM topic $topic: ${task.exception?.message}")
             }
           }
       } catch (e: Exception) {
-        Log.w(TAG, "Error unsubscribing from $lastTopic: ${e.message}")
+        Log.e(TAG, "Error subscribing to $topic: ${e.message}")
       }
-    }
-
-    // Subscribe to new photographer's studio topic
-    try {
-      FirebaseMessaging.getInstance().subscribeToTopic(newTopic)
-        .addOnCompleteListener { task ->
-          if (task.isSuccessful) {
-            prefs.edit().putString(KEY_CURRENT_TOPIC, newTopic).apply()
-            Log.d(TAG, "Successfully subscribed to FCM topic: $newTopic")
-          } else {
-            Log.e(TAG, "Failed to subscribe to FCM topic $newTopic: ${task.exception?.message}")
-          }
-        }
-    } catch (e: Exception) {
-      Log.e(TAG, "Error subscribing to $newTopic: ${e.message}")
     }
   }
 
