@@ -10,7 +10,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.aistudio.freelancingcalendar.app"
+        applicationId = "com.FreeLancingCalendar.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
