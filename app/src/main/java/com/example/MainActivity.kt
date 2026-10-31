@@ -74,9 +74,32 @@ class MainActivity : ComponentActivity() {
 
   private val persistentSyncScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.SupervisorJob())
   private var globalSyncManagerRef: com.example.data.remote.FirestoreSyncManager? = null
+  private var currentViewModelRef: StudioViewModel? = null
+
+  override fun onNewIntent(newIntent: android.content.Intent) {
+    super.onNewIntent(newIntent)
+    intent = newIntent
+    val isNotif = newIntent.getStringExtra("NAV_DESTINATION") == "NOTIFICATIONS" ||
+        (newIntent.hasExtra("clientName") == true) ||
+        (newIntent.hasExtra("inquiryId") == true)
+    if (isNotif) {
+      currentViewModelRef?.navigateTo(AppNavDestination.NOTIFICATIONS)
+    }
+    persistentSyncScope.launch {
+      try {
+        globalSyncManagerRef?.manualRefresh()
+      } catch (_: Exception) {}
+    }
+  }
 
   override fun onResume() {
     super.onResume()
+    val isNotif = (intent?.getStringExtra("NAV_DESTINATION") == "NOTIFICATIONS") ||
+        (intent?.hasExtra("clientName") == true) ||
+        (intent?.hasExtra("inquiryId") == true)
+    if (isNotif) {
+      currentViewModelRef?.navigateTo(AppNavDestination.NOTIFICATIONS)
+    }
     persistentSyncScope.launch {
       try {
         globalSyncManagerRef?.manualRefresh()
@@ -127,6 +150,7 @@ class MainActivity : ComponentActivity() {
       MyApplicationTheme {
         val viewModel: StudioViewModel = viewModel(factory = factory)
         viewModel.syncManager = syncManager
+        currentViewModelRef = viewModel
 
         // Request Notification Permission on Android 13+ (API 33+)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -140,7 +164,9 @@ class MainActivity : ComponentActivity() {
 
         // Navigate to inquiries if opened from system notification
         androidx.compose.runtime.LaunchedEffect(intent) {
-          if (intent?.getStringExtra("NAV_DESTINATION") == "NOTIFICATIONS") {
+          if (intent?.getStringExtra("NAV_DESTINATION") == "NOTIFICATIONS" ||
+              (intent?.hasExtra("clientName") == true) ||
+              (intent?.hasExtra("inquiryId") == true)) {
             viewModel.navigateTo(AppNavDestination.NOTIFICATIONS)
           }
         }
